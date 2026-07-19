@@ -35,4 +35,4 @@ npm run dev
 
 This project is a derivative work of [SCP: Containment Breach](https://github.com/Regalis11/scpcb) by Regalis, whose game and source code are licensed under [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/). The map generation logic is ported from its source (`MapSystem.bb`, `UpdateEvents.bb`, `Main.bb`), and the forest heightmap data is extracted from the game's assets.
 
-Accordingly, the port and visualizer (by [Syial](https://github.com/Syial)) are released under the same license: **CC BY-SA 3.0**. See [LICENSE](LICENSE).
+Accordingly, the port and visualizer (by [Syial](https://github.com/Syial)) are released under **[CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)** (a later version of the same license, as permitted by its ShareAlike terms). See [LICENSE](LICENSE).
