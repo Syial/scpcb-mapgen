@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SCP:CB Seed Terminal</title>
+    <meta name="description" content="Deterministic map generator for SCP: Containment Breach — bit-exact, with criteria-based seed search." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <main class="chassis">
+      <!-- Le pupitre : deux verbes. TRACER = j'ai une seed ; CHERCHER = je veux
+           des seeds qui ressemblent à ça. Un onglet par verbe, une barre par mode. -->
+      <div class="post">
+        <nav class="tabs" role="tablist">
+          <button id="tab-trace" class="tab on" role="tab" aria-selected="true">Trace</button>
+          <button id="tab-search" class="tab" role="tab" aria-selected="false">Search</button>
+        </nav>
+
+        <!-- Ordre = fréquence d'usage : seed, son mode d'interprétation, l'action,
+             puis l'aléatoire. Les options rares (intro n'est jouée par aucune
+             catégorie de speedrun ; anomalous est un réglage de vue) vivent dans
+             un dépliant à l'écart. -->
+        <form class="bar" id="bar-trace">
+          <label class="lbl" for="seed">Seed</label>
+          <input id="seed" type="text" autocomplete="off" spellcheck="false" />
+          <label class="toggle" title="Speedrun mod: the seed is the number itself (1–2147483647), no hashing. Reaches maps the base game cannot produce."><input id="mod" type="checkbox" /> mod</label>
+          <button type="submit" class="go">Trace</button>
+          <button type="button" id="random">Random</button>
+          <span class="flex"></span>
+          <span id="alert-line" class="alertline" hidden>⚠ No exit</span>
+          <details class="opts">
+            <summary>Options</summary>
+            <div class="opts-menu">
+              <label class="toggle" title="Adds SCP-173's chamber and can reshape other rooms (18% of seeds). No speedrun category plays the intro."><input id="intro" type="checkbox" /> intro</label>
+              <label class="toggle" title="Show teleport-only places (Gate A, Pocket Dimension, SCP-1499's dimension…). Their grid position is an implementation artifact, not a location."><input id="anomalous" type="checkbox" /> anomalous</label>
+            </div>
+          </details>
+        </form>
+
+        <form class="bar" id="bar-search" hidden>
+          <label class="lbl" for="from">Range</label>
+          <input id="from" type="text" inputmode="numeric" value="0" />
+          <span class="lbl">—</span>
+          <input id="to" type="text" inputmode="numeric" value="50000" />
+          <label class="toggle" title="Speedrun mod: raw numeric seeds, full range."><input id="s-mod" type="checkbox" /> mod</label>
+          <button type="submit" class="go" id="scan-btn">Scan</button>
+          <span class="flex"></span>
+          <span id="progress" class="lbl"></span>
+          <details class="opts">
+            <summary>Options</summary>
+            <div class="opts-menu">
+              <label class="toggle"><input id="s-intro" type="checkbox" /> intro</label>
+            </div>
+          </details>
+        </form>
+      </div>
+
+      <div class="decks">
+        <div class="stack">
+          <section class="screen screen-map" id="screen-map" aria-label="Facility map">
+            <div class="map" id="map"></div>
+          </section>
+          <!-- Moniteurs secondaires : les cartes annexes du jeu. Éteints tant que
+               leur génération n'est pas portée ; cliquables pour permuter ensuite. -->
+          <div class="minis">
+            <div class="screen mini" id="mini-tunnels" aria-label="Maintenance tunnels"></div>
+            <div class="screen mini" id="mini-forest" aria-label="SCP-860 forest"></div>
+          </div>
+        </div>
+
+        <!-- Colonne à double usage : inspection en mode TRACER, critères+résultats
+             en mode CHERCHER. On échange le contenu, jamais la structure — c'est ce
+             qui garantit le zéro-scroll de page. -->
+        <aside class="screen side">
+          <div id="panel-inspect" class="panel">
+            <h2 class="eyebrow">Selection</h2>
+            <div id="sel-name">—</div>
+            <div id="sel-meta">hover a room</div>
+            <div id="sel-body" class="scrollable"></div>
+
+            <h2 class="eyebrow">Missing rooms</h2>
+            <div id="missing"></div>
+
+            <details class="drawer codes">
+              <summary>Keypad codes</summary>
+              <div class="drawer-body">
+                <div class="codecalc">
+                  <label>Office <input id="code-office" type="text" inputmode="numeric" maxlength="4" placeholder="1–9 ×4" /></label>
+                  <span class="arrow">⇄</span>
+                  <label>Tunnels <input id="code-tunnels" type="text" inputmode="numeric" maxlength="4" placeholder="1000–9999" /></label>
+                </div>
+                <p class="note" id="code-note"></p>
+              </div>
+            </details>
+
+            <div class="foot">
+              <details class="drawer">
+                <summary>Raw data</summary>
+                <div class="drawer-body">
+                  <div id="counts"></div>
+                  <table id="bits"></table>
+                </div>
+              </details>
+            </div>
+          </div>
+
+          <div id="panel-search" class="panel" hidden>
+            <h2 class="eyebrow">Criteria</h2>
+            <div class="crit">
+              <label class="crow"><input type="checkbox" id="c-unfin" /> unfinishable</label>
+              <label class="crow"><input type="checkbox" id="c-overlap" /> has room overlap</label>
+              <div class="crow lbl2">missing rooms:</div>
+              <label class="crow sub"><input type="checkbox" class="c-miss" value="room2ccont" /> room2ccont — electrical center</label>
+              <label class="crow sub"><input type="checkbox" class="c-miss" value="room079" /> room079 — SCP-079 <span class="modonly">(mod)</span></label>
+              <label class="crow sub"><input type="checkbox" class="c-miss" value="008" /> 008</label>
+              <label class="crow sub"><input type="checkbox" class="c-miss" value="room035" /> room035</label>
+              <label class="crow sub"><input type="checkbox" class="c-miss" value="coffin" /> coffin</label>
+              <label class="crow sub"><input type="checkbox" class="c-miss" value="room106" /> room106</label>
+            </div>
+            <h2 class="eyebrow res-head">Results <span id="res-count"></span></h2>
+            <div id="results" class="scrollable"></div>
+            <p class="note">Hover a result to preview its map, click to keep it.</p>
+          </div>
+        </aside>
+      </div>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
