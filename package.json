@@ -1,5 +1,5 @@
 {
-  "name": "scpcb-map-visualizer",
+  "name": "scpcb-mapgen",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -7,10 +7,10 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "test": "esbuild ./tests/conformance.ts --bundle --platform=node --format=esm --outfile=./tests/.run.mjs --log-level=error && node ./tests/.run.mjs"
+    "test": "esbuild ./tests/conformance.ts --bundle --platform=node --format=esm --outfile=./tests/.run.mjs --log-level=error && node ./tests/.run.mjs",
+    "test:filters": "esbuild ./tests/filters.ts --bundle --platform=node --format=esm --outfile=./tests/.filters.mjs --log-level=error && node ./tests/.filters.mjs"
   },
   "devDependencies": {
-    "@resvg/resvg-js": "^2.6.2",
     "esbuild": "^0.28.1",
     "typescript": "^5.5.4",
     "vite": "^5.4.8"

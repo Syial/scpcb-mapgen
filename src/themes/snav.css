@@ -1,0 +1,44 @@
+/* S-NAV - palette extraite du device + mockup cible */
+
+html[data-theme="snav"] {
+  --mono: "IBM Plex Sans", system-ui, sans-serif;
+  --display: "IBM Plex Sans", system-ui, sans-serif;
+
+  /* Boîtier device (beiges du mockup) */
+  --snav-beige-dark: #CFCAB7;
+  --snav-beige: #DDD7C9;
+  --snav-rubber: #1E1E1E;
+
+  /* carte CRT */
+  --map-screen: #6A785F;
+  --map-label: #A8B4A0;
+  --snav-room: #2E382C;
+
+  --alert: #9E332A;
+  --ok: #5A6458;
+  --warn: #A88838;
+  --chassis: var(--snav-beige);
+  --chassis-text: #5A5848;
+  --screen: var(--snav-beige);
+  --screen-off: #D4CFC0;
+  --input: #C8C2B4;
+  --ink: #1A1A1A;
+  --ink-dim: #6A6658;
+  --ink-dimmer: #9A9688;
+  --ink-hi: #101010;
+  --accent: var(--snav-rubber);
+  --rule: #B8B4A8;
+  --line: #C4C0B4;
+  --on-accent: var(--snav-beige);
+  --body-bg: var(--snav-beige-dark);
+  --chassis-border: var(--snav-rubber);
+  --label-accent: #9B4A3F;
+  --label-accent-deep: #8A3E36;
+  --accent-ink: #F4E8E0;
+  --accent-muted: #2A2A2A;
+  --zone-gap: var(--sp-3);
+  --zone-radius: 4px;
+  --map-frame: 6px;
+  --map-radius: 10px;
+  --map-inner-radius: 4px;
+}

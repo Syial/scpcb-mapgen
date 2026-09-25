@@ -1,0 +1,243 @@
+{
+ "914": [
+  {
+   "keycard": 2
+  }
+ ],
+ "008": [
+  {
+   "keycard": 4
+  }
+ ],
+ "checkpoint1": [
+  {
+   "keycard": 3
+  },
+  {
+   "code": "GEAR"
+  }
+ ],
+ "checkpoint2": [
+  {
+   "keycard": 5
+  },
+  {
+   "code": "GEAR"
+  }
+ ],
+ "coffin": [
+  {
+   "keycard": 2
+  }
+ ],
+ "endroom": [
+  {
+   "keycard": 6
+  }
+ ],
+ "exit1": [
+  {
+   "keycard": 5
+  },
+  {
+   "code": "ABCD"
+  },
+  {
+   "keycard": 3
+  }
+ ],
+ "gatea": [
+  {
+   "keycard": 2
+  }
+ ],
+ "gateaentrance": [
+  {
+   "keycard": 5
+  }
+ ],
+ "medibay": [
+  {
+   "keycard": 3
+  }
+ ],
+ "room012": [
+  {
+   "keycard": 3
+  }
+ ],
+ "room035": [
+  {
+   "keycard": 5
+  },
+  {
+   "code": "5731"
+  }
+ ],
+ "room049": [
+  {
+   "keycard": -2
+  }
+ ],
+ "room079": [
+  {
+   "keycard": 4
+  },
+  {
+   "keycard": 3
+  },
+  {
+   "keycard": -1
+  }
+ ],
+ "room106": [
+  {
+   "keycard": 4
+  }
+ ],
+ "room1123": [
+  {
+   "keycard": 3
+  }
+ ],
+ "room1162": [
+  {
+   "keycard": 2
+  }
+ ],
+ "room1archive": [
+  {
+   "keycard": 6
+  }
+ ],
+ "room205": [
+  {
+   "keycard": 3
+  }
+ ],
+ "room2ccont": [
+  {
+   "keycard": 2
+  }
+ ],
+ "room2cpit": [
+  {
+   "keycard": 3
+  }
+ ],
+ "room2nuke": [
+  {
+   "keycard": 5
+  }
+ ],
+ "room2poffices": [
+  {
+   "code": "AccessCode"
+  },
+  {
+   "code": "ABCD"
+  },
+  {
+   "code": "7816"
+  }
+ ],
+ "room2poffices2": [
+  {
+   "keycard": 3
+  },
+  {
+   "code": "1234"
+  }
+ ],
+ "room2scps": [
+  {
+   "keycard": 3
+  }
+ ],
+ "room2scps2": [
+  {
+   "keycard": 3
+  },
+  {
+   "keycard": 4
+  }
+ ],
+ "room2servers": [
+  {
+   "code": "GEAR"
+  }
+ ],
+ "room2servers2": [
+  {
+   "keycard": 3
+  }
+ ],
+ "room2shaft": [
+  {
+   "keycard": 2
+  }
+ ],
+ "room2sl": [
+  {
+   "keycard": 3
+  }
+ ],
+ "room2sroom": [
+  {
+   "keycard": 4
+  }
+ ],
+ "room2test1074": [
+  {
+   "keycard": 3
+  }
+ ],
+ "room2testroom2": [
+  {
+   "keycard": 1
+  }
+ ],
+ "room2tunnel": [
+  {
+   "code": "TunnelsCode"
+  }
+ ],
+ "room3gw": [
+  {
+   "keycard": 3
+  }
+ ],
+ "room3offices": [
+  {
+   "keycard": 3
+  }
+ ],
+ "room513": [
+  {
+   "keycard": 2
+  }
+ ],
+ "room860": [
+  {
+   "code": "ABCD"
+  },
+  {
+   "keycard": 1
+  }
+ ],
+ "room966": [
+  {
+   "keycard": 3
+  }
+ ],
+ "roompj": [
+  {
+   "keycard": 2
+  }
+ ],
+ "testroom": [
+  {
+   "keycard": -1
+  }
+ ]
+}

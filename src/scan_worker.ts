@@ -1,6 +1,6 @@
 import { generateMap, generateMapFromNumber, type MapModel } from "./generation";
-import { residualOverlaps } from "./generation/overlap";
 import { analyseMap } from "./analysis";
+import { evalFilter, type Filter } from "./search/filters";
 
 // Scanner de seeds en Web Worker ; mode `base` (chaîne hashée) ou `mod` (nombre brut).
 
@@ -9,18 +9,13 @@ export interface ScanRequest {
   mode: "base" | "mod";
   from: number;
   to: number; // inclus
-  intro: boolean;
-  // toutes ces salles doivent être absentes (ET logique)
-  missing: string[];
-  unfinishable: boolean;
-  // deux salles jouables encore superposées après l'anti-overlap (~9 % des seeds)
-  overlap: boolean;
+  // filtres composables, cumul en ET
+  filters: Filter[];
 }
 export interface ScanMatch {
   seed: string;
   finishable: boolean;
-  missing: string[]; // salles notables absentes
-  overlaps: string[]; // couples "a∩b" en overlap résiduel
+  notes: string[]; // une note par filtre satisfait
 }
 export type ScanReply =
   | { type: "progress"; done: number; total: number; found: number }
@@ -48,24 +43,23 @@ function run(req: ScanRequest) {
     for (; i <= end; i++) {
       const model: MapModel =
         req.mode === "mod"
-          ? generateMapFromNumber(i, String(i), 18, req.intro)
-          : generateMap(String(i), 18, req.intro);
+          ? generateMapFromNumber(i, String(i), 18, false)
+          : generateMap(String(i), 18, false);
       done++;
 
       const a = analyseMap(model);
-      const absent = new Set(a.missing.map((m) => m.name));
-      if (req.missing.length && !req.missing.every((n) => absent.has(n))) continue;
-      if (req.unfinishable && a.finishable) continue;
-      const overlaps = req.overlap ? residualOverlaps(model.rooms) : [];
-      if (req.overlap && !overlaps.length) continue;
+      const names = new Set(model.rooms.map((r) => r.name));
+      const notes: string[] = [];
+      let pass = true;
+      for (const f of req.filters) {
+        const note = evalFilter(model, f, names, a);
+        if (note === null) { pass = false; break; }
+        notes.push(note);
+      }
+      if (!pass) continue;
 
       found++;
-      pending.push({
-        seed: String(i),
-        finishable: a.finishable,
-        missing: a.missing.map((m) => m.name),
-        overlaps: overlaps.map(([x, y]) => `${x}∩${y}`),
-      });
+      pending.push({ seed: String(i), finishable: a.finishable, notes });
     }
 
     if (pending.length && (pending.length >= 20 || i > req.to)) {

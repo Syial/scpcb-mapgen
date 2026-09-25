@@ -19,3 +19,5 @@ jobs:
       - run: npm run build
       # suite de conformité bit-exacte (6 seeds, 7321 extents)
       - run: npm test
+      # filtres de recherche
+      - run: npm run test:filters

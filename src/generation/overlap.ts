@@ -36,9 +36,15 @@ const MAT: Record<number, number[]> = {};
 for (const a in MAT_BITS) MAT[a] = MAT_BITS[a].map(bitsToF32);
 
 // Extents bit-exacts : TFormVector + shrink + position, avec f() après chaque op (le x87 sous D3D arrondit en 24 bits).
-function calcExtentsRaw(r: PlacedRoom, angle: number): AABB | null {
+function calcExtentsRaw(
+  r: PlacedRoom,
+  angle: number,
+  opts: { forDisplay?: boolean } = {},
+): AABB | null {
   const t = TMPL[r.name];
-  if (!t || t.disableOverlap) return null;
+  // disableOverlap : le jeu ne teste pas, mais le mesh a quand même des bornes (ex. room3storage)
+  if (!t) return null;
+  if (t.disableOverlap && !opts.forDisplay) return null;
   const e = t.ext;
   const A = MAT[angle] !== undefined ? angle : (((angle % 360) + 360) % 360);
   const m = MAT[A] ?? MAT[0];
@@ -70,9 +76,13 @@ function calcExtentsRaw(r: PlacedRoom, angle: number): AABB | null {
   return { minX, minY, minZ, maxX, maxY, maxZ };
 }
 
-// Bornes monde d'une salle à un angle donné — point d'entrée des tests de conformité.
-export function calculateRoomExtents(r: PlacedRoom, angle: number): AABB | null {
-  return calcExtentsRaw(r, angle);
+/** Bornes monde. `forDisplay` : calcule aussi les salles DisableOverlapCheck (mesh présent). */
+export function calculateRoomExtents(
+  r: PlacedRoom,
+  angle: number,
+  opts: { forDisplay?: boolean } = {},
+): AABB | null {
+  return calcExtentsRaw(r, angle, opts);
 }
 // CheckRoomOverlap : intersection AABB (bornes strictes comme le moteur).
 function overlaps(a: AABB, b: AABB): boolean {
@@ -93,7 +103,8 @@ function isSkipped(r: PlacedRoom): boolean {
 // Anti-overlap sur toutes les salles, ordre de création ; onExtent = hook de conformité des tests.
 export function preventRoomOverlap(
   rooms: PlacedRoom[],
-  onExtent?: (r: PlacedRoom, e: AABB) => void
+  onExtent?: (r: PlacedRoom, e: AABB) => void,
+  onStep?: (kind: "rotate" | "swap") => void,
 ): void {
   const ext = new Map<PlacedRoom, AABB>();
   let trace: ((r: PlacedRoom, e: AABB) => void) | undefined;  // activé après les extents initiaux
@@ -140,13 +151,14 @@ export function preventRoomOverlap(
       r.angle = orig + 180;
       setExt(r, r.angle ?? 0);
       if (!anyOverlap(r)) {
+        onStep?.("rotate");
         continue;
       }
       r.angle = orig; // revert
       setExt(r, r.angle ?? 0);
     }
 
-    // 2. Swap même forme/zone — bug fidèle : pas de break, r finit au dernier swap valide.
+    // 2. Swap même forme/zone - bug fidèle : pas de break, r finit au dernier swap valide.
     for (const r2 of rooms) {
       if (r2 === r || isSkipped(r2)) continue;
       if (r.shape !== r2.shape || r.zone !== r2.zone) continue;
@@ -166,6 +178,8 @@ export function preventRoomOverlap(
         r2.gx = r2G[0]; r2.gy = r2G[1]; r2.angle = r2G[2];
         setExt(r, r.angle ?? 0);
         setExt(r2, r2.angle ?? 0);
+      } else {
+        onStep?.("swap");
       }
     }
   }

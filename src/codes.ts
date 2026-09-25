@@ -1,4 +1,5 @@
-// Codes keypad : tunnels = (bureau × 3) mod 10000 (+1000 si < 1000) — l'AccessCode lui-même n'est pas dérivable de la seed.
+// Codes keypad : tunnels = (bureau × 3) mod 10000 (+1000 si < 1000).
+// AccessCode lui-même = 4× Rand(1,9) avant CreateMap, sur le flux MilliSecs - pas dérivable de la seed.
 
 const isOffice = (n: number): boolean =>
   Number.isInteger(n) && n >= 1111 && n <= 9999 && String(n).split("").every((d) => d >= "1" && d <= "9");

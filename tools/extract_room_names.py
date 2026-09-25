@@ -2,14 +2,14 @@
 """
 Génère src/room_names.json : noms d'affichage des salles. Trois couches :
 
-1. FIELD — corrections terrain d'un joueur, priment sur tout. Le jeu se trompe
+1. FIELD - corrections terrain d'un joueur, priment sur tout. Le jeu se trompe
    parfois sur lui-même : la descr de room2scps2 annonce SCP-500, mais son
    confinement est VIDE en jeu ; seule SCP-1499 y est réellement.
-2. AUTO — rooms.ini : les descr au motif de PROPRIÉTÉ de salle
+2. AUTO - rooms.ini : les descr au motif de PROPRIÉTÉ de salle
    (« SCP-X's containment chamber / hallway / spawn area »). Une simple mention
    (« SCP-682's document ») ne nomme pas la salle. Les salles multi-SCP donnent
    un nom composite (« SCP-714 · 860 · 1025 »).
-3. COMMUNITY — nomenclature de la communauté pour les salles sans SCP, sourcée :
+3. COMMUNITY - nomenclature de la communauté pour les salles sans SCP, sourcée :
    https://scp-anomaly-breach-2.fandom.com/wiki/Entrance_Zone (mapping explicite)
    https://undertowgames.com/forum/viewtopic.php?t=58 (forum officiel, 2012)
 """

@@ -8,7 +8,7 @@ export interface Template {
   zones: number[];    // zone[0..4], valeurs de zone1..zone5 de rooms.ini
 }
 
-// Ordre préservé depuis rooms.ini — critique : la sélection en dépend.
+// Ordre préservé depuis rooms.ini - critique : la sélection en dépend.
 export const templates = templatesData as Template[];
 
 // Sélection du template d'une générique (CreateRoom 2058-2094) : un Rand(temp), deux boucles commonness identiques au jeu.

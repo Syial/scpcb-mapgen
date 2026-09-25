@@ -1,4 +1,4 @@
-// Conformité bit-exacte : extents comparés motif à motif au dump du runtime — un ULP d'écart échoue.
+// Conformité bit-exacte : extents comparés motif à motif au dump du runtime - un ULP d'écart échoue.
 import { BlitzRng } from "../src/rng/blitz_rng";
 import { carveCorridors } from "../src/generation/carving";
 import { assignRooms } from "../src/generation/rooms";
@@ -61,9 +61,9 @@ for (const [seed, intro] of CASES) {
   const tag = `${seed}${intro ? " [intro]" : ""}`.padEnd(15);
   console.log(ok
     ? `  ✓ ${tag} ${n} extents bit-exacts`
-    : `  ✗ ${tag} ${diffs} écarts (1er @${first}) — ${ours.length} vs ${game.length}`);
+    : `  ✗ ${tag} ${diffs} écarts (1er @${first}) - ${ours.length} vs ${game.length}`);
 }
 console.log(failed
   ? `\n✗ ${failed}/${CASES.length} cas en échec`
-  : `\n✓ ${CASES.length} maps, ${total} extents — 100% bit-exact`);
+  : `\n✓ ${CASES.length} maps, ${total} extents - 100% bit-exact`);
 process.exit(failed ? 1 : 0);

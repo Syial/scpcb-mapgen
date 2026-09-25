@@ -1,0 +1,321 @@
+/* S-NAV - mise en page & composants */
+
+html[data-theme="snav"] .chassis {
+  background: var(--body-bg);
+  border-left: none;
+  border-right: none;
+  padding: var(--zone-gap);
+  gap: var(--zone-gap);
+  box-shadow: none;
+}
+
+/* zones : topbar · panneau · carte */
+html[data-theme="snav"] .toprail,
+html[data-theme="snav"] .inspect-rail,
+html[data-theme="snav"] .search-rail {
+  border: var(--bw) solid var(--snav-rubber);
+  background: var(--screen);
+  border-radius: var(--zone-radius);
+  min-height: 0;
+}
+
+html[data-theme="snav"] .stage,
+html[data-theme="snav"] .chassis.mode-trace .stage,
+html[data-theme="snav"] .chassis.mode-search .stage {
+  display: flex;
+  flex-direction: column;
+  padding: var(--map-frame);
+  background: var(--snav-rubber);
+  border: none;
+  border-radius: var(--map-radius);
+  min-height: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+html[data-theme="snav"] .screen-map,
+html[data-theme="snav"] .chassis.mode-trace .screen-map,
+html[data-theme="snav"] .chassis.mode-search .screen-map {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  background: var(--map-screen);
+  border-radius: var(--map-inner-radius);
+  overflow: hidden;
+}
+
+html[data-theme="snav"] .workspace {
+  min-height: 0;
+}
+
+html[data-theme="snav"] .chassis.mode-trace .workspace,
+html[data-theme="snav"] .chassis.mode-search .workspace {
+  gap: var(--zone-gap);
+}
+
+html[data-theme="snav"] .rail {
+  background: var(--screen);
+}
+
+html[data-theme="snav"] .panel-core {
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+}
+
+html[data-theme="snav"] .inspect-head .eyebrow,
+html[data-theme="snav"] #sel-body .sec-label {
+  color: var(--label-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: var(--fs-tiny);
+}
+
+html[data-theme="snav"] .inspect-head {
+  border-bottom: var(--bw) solid var(--snav-rubber);
+  margin-bottom: 0;
+  padding-bottom: var(--sp-3);
+}
+
+html[data-theme="snav"] #sel-body .sec:first-child {
+  border-top: none;
+  padding-top: var(--sp-3);
+}
+
+html[data-theme="snav"] #sel-body .sec {
+  border-top-color: var(--snav-rubber);
+}
+
+html[data-theme="snav"] .search-head {
+  background: transparent;
+  border-radius: 0;
+  border-bottom-color: var(--snav-rubber);
+}
+
+html[data-theme="snav"] .fb-criteria,
+html[data-theme="snav"] .fb-pick-pane {
+  background: transparent;
+  border-radius: 0;
+}
+
+html[data-theme="snav"] .fb-field > .sec-label,
+html[data-theme="snav"] .filter-popover-head .sec-label,
+html[data-theme="snav"] .search-run .range-field .sec-label,
+html[data-theme="snav"] .range-field .sec-label,
+html[data-theme="snav"] .scan-stat-lbl,
+html[data-theme="snav"] .room-pick-group,
+html[data-theme="snav"] .fb-type-group-lbl,
+html[data-theme="snav"] .session-io-head .sec-label,
+html[data-theme="snav"] .session-io-block .sec-label {
+  color: var(--label-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: var(--fs-tiny);
+}
+
+html[data-theme="snav"] .fb-field,
+html[data-theme="snav"] .fb-pick-pane,
+html[data-theme="snav"] .fb-compose-actions,
+html[data-theme="snav"] .scan-stats,
+html[data-theme="snav"] .results-tools,
+html[data-theme="snav"] .results-pager {
+  border-color: var(--snav-rubber);
+}
+
+html[data-theme="snav"] .filter-popover,
+html[data-theme="snav"] .fb-type-menu,
+html[data-theme="snav"] .session-io-panel {
+  border-color: var(--snav-rubber);
+  box-shadow: none;
+}
+
+html[data-theme="snav"] .fb-tog button.on,
+html[data-theme="snav"] .room-pick-zones button.on,
+html[data-theme="snav"] .filter-summary.has-filters,
+html[data-theme="snav"] .fb-compose-actions button,
+html[data-theme="snav"] .session-io-action,
+html[data-theme="snav"] .room-pick.open .room-slot-btn {
+  background: var(--label-accent);
+  color: var(--accent-ink);
+}
+
+html[data-theme="snav"] .fb-compose-actions button:hover,
+html[data-theme="snav"] .session-io-action:hover:not(:disabled),
+html[data-theme="snav"] .filter-summary.has-filters[aria-expanded="true"] {
+  background: var(--label-accent-deep);
+  color: var(--accent-ink);
+}
+
+html[data-theme="snav"] .res:hover,
+html[data-theme="snav"] .res.on,
+html[data-theme="snav"] .fb-type-menu button.on,
+html[data-theme="snav"] .fb-type-menu button:hover,
+html[data-theme="snav"] .room-pick-opt.on,
+html[data-theme="snav"] .room-pick-opt:hover {
+  background: color-mix(in srgb, var(--label-accent) 14%, transparent);
+}
+
+html[data-theme="snav"] .scan-stat-bar > i,
+html[data-theme="snav"] #scan-bar {
+  background-color: var(--label-accent);
+}
+
+html[data-theme="snav"] .scan-stats.done .scan-stat-bar > i,
+html[data-theme="snav"] .scan-stats.done #scan-bar {
+  background-color: var(--label-accent);
+}
+
+html[data-theme="snav"] .mode-switch,
+html[data-theme="snav"] .view-tabs,
+html[data-theme="snav"] .bar-actions,
+html[data-theme="snav"] .seed-field #seed {
+  background: var(--input);
+}
+
+html[data-theme="snav"] .mode-btn.on,
+html[data-theme="snav"] .view-tab.on,
+html[data-theme="snav"] .bar button.go,
+html[data-theme="snav"] .search-run .bar-actions .go,
+html[data-theme="snav"] .bar button.dice,
+html[data-theme="snav"] .mod-toggle:has(input:checked) {
+  background: var(--label-accent);
+  color: var(--accent-ink);
+  box-shadow: none;
+}
+
+html[data-theme="snav"] .mode-btn.on:hover,
+html[data-theme="snav"] .view-tab.on:hover,
+html[data-theme="snav"] .bar button.go:hover,
+html[data-theme="snav"] .search-run .bar-actions .go:hover,
+html[data-theme="snav"] .bar button.dice:hover {
+  background: var(--label-accent-deep);
+  color: var(--accent-ink);
+}
+
+html[data-theme="snav"] .map-slot-facility,
+html[data-theme="snav"] .map-slot-tunnels,
+html[data-theme="snav"] .map-slot-forest {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+}
+
+html[data-theme="snav"] .map-slot-facility .map,
+html[data-theme="snav"] .map-slot-tunnels .map,
+html[data-theme="snav"] .map-slot-forest .map {
+  min-height: 0;
+  flex: 1;
+}
+
+html[data-theme="snav"] .map-slot-facility .map svg,
+html[data-theme="snav"] .map-slot-tunnels .map svg,
+html[data-theme="snav"] .map-slot-forest .map svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+html[data-theme="snav"] .map-empty {
+  color: var(--map-label);
+  font-style: normal;
+}
+
+html[data-theme="snav"] .chassis.mode-trace .map-slot-facility,
+html[data-theme="snav"] .chassis.mode-trace .map-slot-tunnels,
+html[data-theme="snav"] .chassis.mode-trace .map-slot-forest,
+html[data-theme="snav"] .chassis.mode-search .map-slot-facility,
+html[data-theme="snav"] .chassis.mode-search .map-slot-tunnels,
+html[data-theme="snav"] .chassis.mode-search .map-slot-forest {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+/* Subzones : deux S-Nav séparés, fond site dans le vide */
+html[data-theme="snav"] .chassis.mode-trace[data-map="subzones"] .stage,
+html[data-theme="snav"] .chassis.mode-search[data-map="subzones"] .stage {
+  padding: 0;
+  background: transparent;
+  overflow: hidden;
+}
+
+html[data-theme="snav"] .chassis.mode-trace[data-map="subzones"] .screen-map,
+html[data-theme="snav"] .chassis.mode-search[data-map="subzones"] .screen-map {
+  container-type: inline-size;
+  padding: 0;
+  gap: var(--zone-gap);
+  background: transparent;
+  overflow: visible;
+  border-radius: 0;
+  align-items: flex-start;
+  justify-content: stretch;
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+html[data-theme="snav"] .chassis.mode-trace[data-map="subzones"] .map-slot-tunnels,
+html[data-theme="snav"] .chassis.mode-trace[data-map="subzones"] .map-slot-forest,
+html[data-theme="snav"] .chassis.mode-search[data-map="subzones"] .map-slot-tunnels,
+html[data-theme="snav"] .chassis.mode-search[data-map="subzones"] .map-slot-forest {
+  border: none;
+  border-radius: var(--map-radius);
+  padding: var(--map-frame);
+  background: var(--snav-rubber);
+  overflow: hidden;
+  box-sizing: border-box;
+  aspect-ratio: 1;
+  height: auto;
+  min-width: 0;
+}
+
+html[data-theme="snav"] .chassis.mode-trace[data-map="subzones"] .map-slot-tunnels,
+html[data-theme="snav"] .chassis.mode-search[data-map="subzones"] .map-slot-tunnels {
+  flex: 18 1 0;
+  width: calc((100cqw - var(--zone-gap)) * 18 / 28);
+  max-width: calc((100cqw - var(--zone-gap)) * 18 / 28);
+  align-self: flex-start;
+}
+
+html[data-theme="snav"] .chassis.mode-trace[data-map="subzones"] .map-col-forest,
+html[data-theme="snav"] .chassis.mode-search[data-map="subzones"] .map-col-forest {
+  flex: 10 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--zone-gap);
+  height: calc((100cqw - var(--zone-gap)) * 18 / 28);
+  max-height: calc((100cqw - var(--zone-gap)) * 18 / 28);
+  align-self: flex-start;
+}
+
+html[data-theme="snav"] .chassis.mode-trace[data-map="subzones"] .map-slot-forest,
+html[data-theme="snav"] .chassis.mode-search[data-map="subzones"] .map-slot-forest {
+  flex: none;
+  width: 100%;
+}
+
+html[data-theme="snav"] .subzone-panel {
+  border-color: var(--snav-rubber);
+  background: var(--screen);
+  border-radius: var(--zone-radius);
+}
+
+html[data-theme="snav"] .chassis.mode-trace[data-map="subzones"] .map-slot-tunnels .map,
+html[data-theme="snav"] .chassis.mode-trace[data-map="subzones"] .map-slot-forest .map,
+html[data-theme="snav"] .chassis.mode-search[data-map="subzones"] .map-slot-tunnels .map,
+html[data-theme="snav"] .chassis.mode-search[data-map="subzones"] .map-slot-forest .map {
+  background: var(--map-screen);
+  border-radius: var(--map-inner-radius);
+  overflow: hidden;
+}
+
+html[data-theme="snav"] .map-zone-label {
+  color: rgb(100, 0, 0);
+}
+
+html[data-theme="snav"] .chassis.mode-trace[data-map="subzones"] .map-zone-label,
+html[data-theme="snav"] .chassis.mode-search[data-map="subzones"] .map-zone-label {
+  top: calc(var(--map-frame) + 10px);
+  left: calc(var(--map-frame) + 12px);
+}

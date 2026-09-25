@@ -3,3 +3,13 @@ dist/
 .vite/
 *.log
 .DS_Store
+
+# Local debug dumps (SeedEvents probes, RNG forks, etc.)
+/*.txt
+.claude/
+
+# Generated / ephemeral
+tests/.run.mjs
+tests/.filters.mjs
+tools/.*.mjs
+scripts/_item_extract.*

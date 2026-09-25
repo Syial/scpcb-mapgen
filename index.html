@@ -1,132 +1,569 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="snav" data-btn="clay">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>SCP:CB Seed Terminal</title>
-    <meta name="description" content="Deterministic map generator for SCP: Containment Breach — bit-exact, with criteria-based seed search." />
+    <title>S-Nav</title>
+    <meta name="description" content="Deterministic map generator for SCP: Containment Breach - bit-exact, with criteria-based seed search." />
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+    <style>
+      @font-face {
+        font-family: "DS-Digital";
+        src: url("./fonts/DS-Digital.ttf") format("truetype");
+        font-weight: 400;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: "Big Shoulders";
+        src: url("./fonts/BigShoulders-Bold.woff2") format("woff2");
+        font-weight: 700;
+        font-style: normal;
+        font-display: swap;
+      }
+    </style>
   </head>
   <body>
-    <main class="chassis">
-      <!-- Le pupitre : deux verbes. TRACER = j'ai une seed ; CHERCHER = je veux
-           des seeds qui ressemblent à ça. Un onglet par verbe, une barre par mode. -->
-      <div class="post">
-        <nav class="tabs" role="tablist">
-          <button id="tab-trace" class="tab on" role="tab" aria-selected="true">Trace</button>
-          <button id="tab-search" class="tab" role="tab" aria-selected="false">Search</button>
-        </nav>
-
-        <!-- Ordre = fréquence d'usage : seed, son mode d'interprétation, l'action,
-             puis l'aléatoire. Les options rares (intro n'est jouée par aucune
-             catégorie de speedrun ; anomalous est un réglage de vue) vivent dans
-             un dépliant à l'écart. -->
-        <form class="bar" id="bar-trace">
-          <label class="lbl" for="seed">Seed</label>
-          <input id="seed" type="text" autocomplete="off" spellcheck="false" />
-          <label class="toggle" title="Speedrun mod: the seed is the number itself (1–2147483647), no hashing. Reaches maps the base game cannot produce."><input id="mod" type="checkbox" /> mod</label>
-          <button type="submit" class="go">Trace</button>
-          <button type="button" id="random">Random</button>
-          <span class="flex"></span>
-          <span id="alert-line" class="alertline" hidden>⚠ No exit</span>
-          <details class="opts">
-            <summary>Options</summary>
-            <div class="opts-menu">
-              <label class="toggle" title="Adds SCP-173's chamber and can reshape other rooms (18% of seeds). No speedrun category plays the intro."><input id="intro" type="checkbox" /> intro</label>
-              <label class="toggle" title="Show teleport-only places (Gate A, Pocket Dimension, SCP-1499's dimension…). Their grid position is an implementation artifact, not a location."><input id="anomalous" type="checkbox" /> anomalous</label>
-            </div>
-          </details>
-        </form>
-
-        <form class="bar" id="bar-search" hidden>
-          <label class="lbl" for="from">Range</label>
-          <input id="from" type="text" inputmode="numeric" value="0" />
-          <span class="lbl">—</span>
-          <input id="to" type="text" inputmode="numeric" value="50000" />
-          <label class="toggle" title="Speedrun mod: raw numeric seeds, full range."><input id="s-mod" type="checkbox" /> mod</label>
-          <button type="submit" class="go" id="scan-btn">Scan</button>
-          <span class="flex"></span>
-          <span id="progress" class="lbl"></span>
-          <details class="opts">
-            <summary>Options</summary>
-            <div class="opts-menu">
-              <label class="toggle"><input id="s-intro" type="checkbox" /> intro</label>
-            </div>
-          </details>
-        </form>
-      </div>
-
-      <div class="decks">
-        <div class="stack">
-          <section class="screen screen-map" id="screen-map" aria-label="Facility map">
-            <div class="map" id="map"></div>
-          </section>
-          <!-- Moniteurs secondaires : les cartes annexes du jeu. Éteints tant que
-               leur génération n'est pas portée ; cliquables pour permuter ensuite. -->
-          <div class="minis">
-            <div class="screen mini" id="mini-tunnels" aria-label="Maintenance tunnels"></div>
-            <div class="screen mini" id="mini-forest" aria-label="SCP-860 forest"></div>
+    <!--
+      Toprail : marque · Trace|Search · barre · onglets · brief.
+      Workspace : rail · stage.
+    -->
+    <main class="chassis mode-trace search-compose">
+      <header class="toprail">
+        <div class="toprail-main">
+          <div class="brand" aria-label="S-Nav">
+            <span class="brand-mark">S-Nav</span>
           </div>
-        </div>
 
-        <!-- Colonne à double usage : inspection en mode TRACER, critères+résultats
-             en mode CHERCHER. On échange le contenu, jamais la structure — c'est ce
-             qui garantit le zéro-scroll de page. -->
-        <aside class="screen side">
-          <div id="panel-inspect" class="panel">
-            <h2 class="eyebrow">Selection</h2>
-            <div id="sel-name">—</div>
-            <div id="sel-meta">hover a room</div>
-            <div id="sel-body" class="scrollable"></div>
+          <div class="toprail-lead">
+            <nav class="mode-switch" role="tablist" aria-label="Mode">
+              <button type="button" id="tab-trace" class="mode-btn on" role="tab" aria-selected="true">Trace</button>
+              <button type="button" id="tab-search" class="mode-btn" role="tab" aria-selected="false">Search</button>
+            </nav>
+            <button
+              type="button"
+              class="about-btn"
+              id="about-btn"
+              title="About & license"
+              aria-label="About and license"
+              aria-haspopup="dialog"
+              aria-controls="about-overlay"
+              aria-expanded="false"
+            >
+              <svg class="about-ico" width="14" height="14" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                <path fill="currentColor" d="M8.75.75V2h.985c.304 0 .603.08.867.231l1.29.736c.038.022.08.033.124.033h2.234a.75.75 0 0 1 0 1.5h-.427l2.111 4.692a.75.75 0 0 1-.154.838l-.53-.53.529.531-.001.002-.002.002-.006.006-.006.005-.01.01-.045.04c-.21.176-.441.327-.686.45C14.556 10.78 13.88 11 13 11a4.498 4.498 0 0 1-2.023-.454 3.544 3.544 0 0 1-.686-.45l-.045-.04-.016-.015-.006-.006-.004-.004v-.001a.75.75 0 0 1-.154-.838L12.178 4.5h-.162c-.305 0-.604-.079-.868-.231l-1.29-.736a.245.245 0 0 0-.124-.033H8.75V13h2.5a.75.75 0 0 1 0 1.5h-6.5a.75.75 0 0 1 0-1.5h2.5V3.5h-.984a.245.245 0 0 0-.124.033l-1.289.737c-.265.15-.564.23-.869.23h-.162l2.112 4.692a.75.75 0 0 1-.154.838l-.53-.53.529.531-.001.002-.002.002-.006.006-.016.015-.045.04c-.21.176-.441.327-.686.45C4.556 10.78 3.88 11 3 11a4.498 4.498 0 0 1-2.023-.454 3.544 3.544 0 0 1-.686-.45l-.045-.04-.016-.015-.006-.006-.004-.004v-.001a.75.75 0 0 1-.154-.838L2.178 4.5H1.75a.75.75 0 0 1 0-1.5h2.234a.249.249 0 0 0 .125-.033l1.288-.737c.265-.15.564-.23.869-.23h.984V.75a.75.75 0 0 1 1.5 0Zm2.945 8.477c.285.135.718.273 1.305.273s1.02-.138 1.305-.273L13 6.327Zm-10 0c.285.135.718.273 1.305.273s1.02-.138 1.305-.273L3 6.327Z"/>
+              </svg>
+            </button>
+          </div>
 
-            <h2 class="eyebrow">Missing rooms</h2>
-            <div id="missing"></div>
+          <div class="toprail-bars">
+          <form class="bar bar-trace" id="bar-trace">
+            <label class="seed-field" for="seed">
+              <span class="sec-label">Seed</span>
+              <input id="seed" type="text" autocomplete="off" spellcheck="false" maxlength="20" aria-label="Seed" />
+            </label>
+            <div class="bar-actions">
+              <button type="submit" class="go">Trace</button>
+              <button type="button" id="random" class="dice" title="Random seed" aria-label="Random seed">
+                <svg class="dice-ico" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path fill="currentColor" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" d="M12 5V2L8 6l4 4V7c2.76 0 5 2.24 5 5 0 .86-.22 1.68-.6 2.4l1.46 1.46C18.53 14.66 19 13.38 19 12c0-3.87-3.13-7-7-7zm0 12c-2.76 0-5-2.24-5-5 0-.86.22-1.68.6-2.4L6.14 8.14C5.47 9.34 5 10.62 5 12c0 3.87 3.13 7 7 7v3l4-4-4-4v3z"/>
+                </svg>
+              </button>
+              <label class="mod-toggle" title="Speedrun mod">
+                <input id="mod" type="checkbox" />
+                <span>Mod</span>
+              </label>
+            </div>
+          </form>
 
-            <details class="drawer codes">
-              <summary>Keypad codes</summary>
-              <div class="drawer-body">
-                <div class="codecalc">
-                  <label>Office <input id="code-office" type="text" inputmode="numeric" maxlength="4" placeholder="1–9 ×4" /></label>
-                  <span class="arrow">⇄</span>
-                  <label>Tunnels <input id="code-tunnels" type="text" inputmode="numeric" maxlength="4" placeholder="1000–9999" /></label>
+          <div class="bar search-bar" id="bar-search-wrap">
+            <form class="search-run" id="bar-search">
+              <div class="range-field">
+                <span class="sec-label">Range</span>
+                <input id="from" type="text" inputmode="numeric" value="0" aria-label="From" />
+                <input id="to" type="text" inputmode="numeric" value="50000" aria-label="To" />
+              </div>
+              <div class="bar-actions">
+                <button type="submit" class="go" id="scan-btn">Search</button>
+                <label class="mod-toggle" title="Speedrun mod">
+                  <input id="s-mod" type="checkbox" />
+                  <span>Mod</span>
+                </label>
+              </div>
+            </form>
+          </div>
+
+            <details class="opts">
+              <summary aria-label="Options" title="Options">
+                <svg class="opts-gear" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path fill="currentColor" d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.1 7.1 0 0 0-1.63-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.55-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.77 8.84a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94L2.89 14.52a.5.5 0 0 0-.12.64l1.92 3.32c.14.24.43.34.68.22l2.39-.96c.5.39 1.04.7 1.63.94l.36 2.54c.05.24.26.42.5.42h3.84c.24 0 .45-.18.5-.42l.36-2.54c.59-.24 1.13-.55 1.63-.94l2.39.96c.25.12.54.02.68-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/>
+                </svg>
+              </summary>
+              <div class="opts-menu">
+                <div class="opts-group" role="group" aria-label="Meshes">
+                  <div class="opts-group-l">Meshes</div>
+                  <label class="toggle" title="Real room sizes">
+                    <input id="extents-map" type="checkbox" />
+                    <span>Real size</span>
+                  </label>
+                  <label class="toggle" title="Full annex meshes">
+                    <input id="oversized-meshes" type="checkbox" />
+                    <span>Oversized meshes</span>
+                  </label>
                 </div>
-                <p class="note" id="code-note"></p>
+                <div class="opts-group" role="group" aria-label="Labels">
+                  <div class="opts-group-l">Labels</div>
+                  <label class="toggle" title="K1 · K2 · EC · MT · SR · PD">
+                    <input id="speedrun-labels" type="checkbox" />
+                    <span>Speedrun</span>
+                  </label>
+                  <label class="toggle" title="A · B · 914 · 008 · 079">
+                    <input id="minimal-labels" type="checkbox" />
+                    <span>Minimal</span>
+                  </label>
+                </div>
+                <div class="opts-group" role="group" aria-label="Playback">
+                  <div class="opts-group-l">Playback</div>
+                  <label class="toggle" title="Animate room placement, fill, and overlap fixes">
+                    <input id="gen-anim" type="checkbox" />
+                    <span>Build anim</span>
+                  </label>
+                </div>
               </div>
             </details>
+            <button
+              type="button"
+              class="codes-btn"
+              id="codes-btn"
+              title="Codes"
+              aria-label="Codes"
+              aria-haspopup="dialog"
+              aria-controls="codes-overlay"
+              aria-expanded="false"
+            >
+              <svg class="codes-ico" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path fill="currentColor" d="M12 1a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V11a2 2 0 0 0-2-2h-1V6a5 5 0 0 0-5-5zm0 2.2A2.8 2.8 0 0 1 14.8 6v3H9.2V6A2.8 2.8 0 0 1 12 3.2zM12 14a1.8 1.8 0 0 1 .9 3.35V19h-1.8v-1.65A1.8 1.8 0 0 1 12 14z"/>
+              </svg>
+            </button>
+            <div id="progress" class="progress" role="status"></div>
+          </div>
 
-            <div class="foot">
-              <details class="drawer">
-                <summary>Raw data</summary>
-                <div class="drawer-body">
-                  <div id="counts"></div>
-                  <table id="bits"></table>
+          <div class="toprail-end">
+            <div class="bar-actions search-io" id="search-io">
+              <button type="button" id="session-io-btn" aria-haspopup="dialog" aria-controls="session-io-overlay" aria-expanded="false">Session</button>
+            </div>
+
+            <nav class="view-tabs" role="tablist" aria-label="Map view">
+              <button type="button" class="view-tab on" id="view-facility" role="tab" aria-selected="true" data-view="facility">Facility</button>
+              <button type="button" class="view-tab" id="view-subzones" role="tab" aria-selected="false" data-view="subzones">Subzones</button>
+            </nav>
+
+            <div class="map-brief" id="map-status" aria-label="Map status">
+              <div class="seed-stats" id="seed-stats">
+                <svg class="status-ico ico-idle" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" opacity="0.35"/>
+                </svg>
+                <svg class="status-ico ico-ok" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-1.5 14.2-3.7-3.7 1.4-1.4 2.3 2.3 5.1-5.1 1.4 1.4-6.5 6.5z"/>
+                </svg>
+                <svg class="status-ico ico-warn" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path fill="currentColor" d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+                </svg>
+                <svg class="status-ico ico-bad" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm3.5 13.1-1.4 1.4L12 13.4l-2.1 2.1-1.4-1.4L10.6 12 8.5 9.9l1.4-1.4L12 10.6l2.1-2.1 1.4 1.4L13.4 12l2.1 3.1z"/>
+                </svg>
+                <span id="status-badge" class="status-badge">No map</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="workspace">
+        <section id="panel-inspect" class="rail inspect-rail">
+          <div class="panel-core">
+            <div class="inspect-head">
+              <h2 class="eyebrow">Room</h2>
+              <div id="sel-name">No room selected</div>
+            <div id="sel-meta">Click a room to pin it · hover to preview.</div>
+            </div>
+            <div id="sel-body" class="scrollable"></div>
+          </div>
+        </section>
+
+        <aside class="rail search-rail" id="side-search" hidden>
+          <header class="search-head">
+            <div class="fb-tog search-phase-tog" id="search-phase-tog" role="group" aria-label="Search mode">
+              <button type="button" class="on" data-phase="compose">Filters</button>
+              <button type="button" data-phase="results" disabled>Results</button>
+            </div>
+            <div class="filter-menu" id="filter-menu">
+              <button type="button" id="fb-summary" class="filter-summary" aria-expanded="false" aria-controls="fb-popover" title="Active filters">no filters</button>
+              <div id="fb-popover" class="filter-popover" hidden>
+                <div class="filter-popover-head">
+                  <span class="sec-label">Active filters</span>
                 </div>
-              </details>
+                <div id="chips" class="filter-list"></div>
+                <p class="note filter-empty" id="filter-empty">No filters yet.</p>
+              </div>
+            </div>
+          </header>
+
+          <div class="fb-rail" id="fbuild">
+            <div class="fb-criteria" aria-label="Filter criteria">
+              <div class="fb-field fb-field-type">
+                <span class="sec-label">type</span>
+                <div class="fb-type-pick" id="fb-type-pick">
+                  <button type="button" class="fb-type-btn" id="fb-type-btn" aria-expanded="false" aria-controls="fb-type-menu" aria-haspopup="listbox">
+                    <span id="fb-type-label">Room presence</span>
+                  </button>
+                  <div class="fb-type-menu" id="fb-type-menu" role="listbox" hidden>
+                    <div class="fb-type-group" role="presentation">
+                      <span class="fb-type-group-lbl">Presence</span>
+                      <button type="button" role="option" data-type="room" class="on">Room presence</button>
+                      <button type="button" role="option" data-type="item">Item presence</button>
+                      <button type="button" role="option" data-type="event">Event on room</button>
+                    </div>
+                    <div class="fb-type-group" role="presentation">
+                      <span class="fb-type-group-lbl">Layout</span>
+                      <button type="button" role="option" data-type="distance">Walk distance</button>
+                      <button type="button" role="option" data-type="overlap">Room overlap</button>
+                      <button type="button" role="option" data-type="out_of_place">Out of place</button>
+                    </div>
+                    <div class="fb-type-group" role="presentation">
+                      <span class="fb-type-group-lbl">Run</span>
+                      <button type="button" role="option" data-type="finishable">Finishable</button>
+                    </div>
+                  </div>
+                </div>
+                <select id="fb-type" hidden aria-hidden="true" tabindex="-1">
+                  <option value="room">Room presence</option>
+                  <option value="item">Item presence</option>
+                  <option value="event">Event on room</option>
+                  <option value="distance">Walk distance</option>
+                  <option value="overlap">Room overlap</option>
+                  <option value="out_of_place">Out of place</option>
+                  <option value="finishable">Finishable</option>
+                </select>
+                <p class="fb-type-desc" id="fb-type-desc" aria-live="polite">Room is present or missing on the map.</p>
+              </div>
+              <div id="fb-room-params" class="fb-criteria-extra">
+                <div class="fb-field">
+                  <span class="sec-label">presence</span>
+                  <div class="fb-tog" id="fb-neg" role="group" aria-label="Presence">
+                    <button type="button" class="on" data-neg="0">present</button>
+                    <button type="button" data-neg="1">missing</button>
+                  </div>
+                </div>
+              </div>
+              <div id="fb-finish-params" class="fb-criteria-extra" hidden>
+                <div class="fb-field">
+                  <span class="sec-label">status</span>
+                  <div class="fb-tog" id="fb-finish" role="group" aria-label="Finishable">
+                    <button type="button" class="on" data-want="1">finishable</button>
+                    <button type="button" data-want="0">unfinishable</button>
+                  </div>
+                </div>
+              </div>
+              <div id="fb-pair-params" class="fb-criteria-extra" hidden>
+                <div class="fb-field">
+                  <span class="sec-label">compare</span>
+                  <div class="fb-tog" id="fb-dist-cmp" role="group" aria-label="Distance compare">
+                    <button type="button" class="on" data-cmp="le">at most</button>
+                    <button type="button" data-cmp="ge">at least</button>
+                  </div>
+                </div>
+                <label class="fb-field" id="fb-dist-extra">
+                  <span class="sec-label" id="fb-dist-bound-lbl">walk distance</span>
+                  <div class="fb-num">
+                    <input id="fb-max" type="number" min="0" max="40" value="8" inputmode="numeric" />
+                    <span class="fb-num-unit">rooms</span>
+                  </div>
+                </label>
+              </div>
+              <div id="fb-choice-params" class="fb-criteria-extra" hidden>
+                <label class="fb-field">
+                  <span class="sec-label" id="fb-choice-lbl">item</span>
+                  <div class="fb-choice-pick">
+                    <select id="fb-choice" class="fb-choice"></select>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <aside id="fb-pick-fly" class="fb-pick-pane" hidden aria-label="Rooms">
+              <div class="room-pick-chosen" id="fb-pick-chosen">
+                <div class="room-pick room-pick-solo" id="fb-room-pick"></div>
+                <div class="fb-pair room-pick-duo" id="fb-pick-duo" hidden>
+                  <div class="room-pick" id="fb-roomA-pick"></div>
+                  <span class="fb-sep" id="fb-pair-sep">↔</span>
+                  <div class="room-pick" id="fb-roomB-pick"></div>
+                </div>
+              </div>
+              <div class="room-pick-tools">
+                <input type="search" class="room-pick-q" id="fb-pick-q" placeholder="Search rooms…" autocomplete="off" />
+                <div class="room-pick-zones" id="fb-pick-zones" role="group" aria-label="Zone">
+                  <button type="button" class="on" data-z="">All</button>
+                  <button type="button" data-z="1">LCZ</button>
+                  <button type="button" data-z="2">HCZ</button>
+                  <button type="button" data-z="3">EZ</button>
+                  <button type="button" data-z="0">ANO</button>
+                </div>
+              </div>
+              <div class="room-pick-group" id="fb-pick-zone-label" hidden></div>
+              <div class="room-pick-list" id="fb-pick-list" role="listbox"></div>
+            </aside>
+
+            <div class="fb-compose-actions">
+              <button id="fb-ok" type="button">Add filter</button>
             </div>
           </div>
 
-          <div id="panel-search" class="panel" hidden>
-            <h2 class="eyebrow">Criteria</h2>
-            <div class="crit">
-              <label class="crow"><input type="checkbox" id="c-unfin" /> unfinishable</label>
-              <label class="crow"><input type="checkbox" id="c-overlap" /> has room overlap</label>
-              <div class="crow lbl2">missing rooms:</div>
-              <label class="crow sub"><input type="checkbox" class="c-miss" value="room2ccont" /> room2ccont — electrical center</label>
-              <label class="crow sub"><input type="checkbox" class="c-miss" value="room079" /> room079 — SCP-079 <span class="modonly">(mod)</span></label>
-              <label class="crow sub"><input type="checkbox" class="c-miss" value="008" /> 008</label>
-              <label class="crow sub"><input type="checkbox" class="c-miss" value="room035" /> room035</label>
-              <label class="crow sub"><input type="checkbox" class="c-miss" value="coffin" /> coffin</label>
-              <label class="crow sub"><input type="checkbox" class="c-miss" value="room106" /> room106</label>
+          <div class="search-results-rail" id="search-results" hidden>
+            <div id="scan-stats" class="scan-stats" role="status" hidden>
+              <div class="scan-stats-row scan-stats-row-counts">
+                <div class="scan-stat">
+                  <span class="scan-stat-val" id="scan-done">-</span>
+                  <span class="scan-stat-lbl">scanned</span>
+                </div>
+                <div class="scan-stat">
+                  <span class="scan-stat-val" id="scan-found">0</span>
+                  <span class="scan-stat-lbl">found</span>
+                </div>
+              </div>
+              <div class="scan-stats-row scan-stats-row-time">
+                <div class="scan-stat">
+                  <span class="scan-stat-val" id="scan-rate">-</span>
+                  <span class="scan-stat-lbl">seeds/s</span>
+                </div>
+                <div class="scan-stat">
+                  <span class="scan-stat-val" id="scan-elapsed">-</span>
+                  <span class="scan-stat-lbl">elapsed</span>
+                </div>
+                <div class="scan-stat">
+                  <span class="scan-stat-val" id="scan-eta">-</span>
+                  <span class="scan-stat-lbl">eta</span>
+                </div>
+              </div>
+              <div class="scan-stat-bar" aria-hidden="true"><i id="scan-bar"></i></div>
             </div>
-            <h2 class="eyebrow res-head">Results <span id="res-count"></span></h2>
+            <div class="results-tools" id="results-tools" hidden></div>
+            <p class="note search-hint">Hover to preview · click to open in Trace</p>
             <div id="results" class="scrollable"></div>
-            <p class="note">Hover a result to preview its map, click to keep it.</p>
+            <div class="results-pager" id="results-pager" hidden>
+              <button type="button" id="results-prev" aria-label="Previous page">Prev</button>
+              <span class="results-page-label" id="results-page-label">1 / 1</span>
+              <button type="button" id="results-next" aria-label="Next page">Next</button>
+            </div>
           </div>
         </aside>
+
+        <div class="stage">
+          <section class="screen-map" id="screen-map" aria-label="Map">
+            <div class="map-slot map-slot-facility">
+              <div class="map-missing" id="map-missing" hidden aria-label="Missing rooms"></div>
+              <div class="map-build-phase" id="map-build-phase" hidden aria-live="polite">
+                <div class="map-build-phase-main" id="map-build-phase-main"></div>
+                <div class="map-build-phase-sub" id="map-build-phase-sub" hidden></div>
+              </div>
+              <div class="map" id="map-facility"></div>
+            </div>
+            <div class="map-slot map-slot-tunnels">
+              <div class="map-zone-label">Maintenance Tunnels</div>
+              <div class="map" id="map-tunnels"></div>
+            </div>
+            <div class="map-col map-col-forest">
+              <div class="map-slot map-slot-forest">
+                <div class="map-zone-label">SCP-860-1</div>
+                <div class="map" id="map-forest"></div>
+              </div>
+              <aside class="subzone-panel subzone-panel-fill" id="subzone-panel-info" aria-label="Subzone details">
+                <div class="subzone-panel-body" id="subzone-info-body"></div>
+                <div class="subzone-wiki">
+                  <div class="sec-label">Other dimensions</div>
+                  <p class="note sz-wiki-note">
+                    These dimensions aren’t generated, they’re fixed.<br />
+                    Links open the official SCP:CB wiki.
+                  </p>
+                  <div class="sz-wiki-list">
+                    <a class="sz-wiki-link" href="https://scpcb.fandom.com/wiki/Pocket_Dimension" target="_blank" rel="noopener noreferrer">Pocket Dimension</a>
+                    <a class="sz-wiki-link" href="https://scpcb.fandom.com/wiki/SCP-1499" target="_blank" rel="noopener noreferrer">SCP-1499</a>
+                  </div>
+                </div>
+              </aside>
+            </div>
+          </section>
+        </div>
       </div>
     </main>
+
+    <div id="session-io-overlay" class="session-io-overlay" hidden>
+      <div class="session-io-backdrop" data-session-io-close tabindex="-1" aria-hidden="true"></div>
+      <div
+        class="session-io-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="session-io-title"
+      >
+        <header class="session-io-head">
+          <h2 class="sec-label" id="session-io-title">Session</h2>
+          <button type="button" class="session-io-close" data-session-io-close aria-label="Close">✕</button>
+        </header>
+
+        <div class="session-io-body">
+          <section class="session-io-block">
+            <div class="session-io-copy-block">
+              <h3 class="sec-label">Export</h3>
+              <p class="session-io-copy">
+                Save filters, seed range, and mode as JSON.
+                Results are included when available; query-only works too.
+              </p>
+            </div>
+            <button type="button" class="session-io-action" id="session-export">Export</button>
+          </section>
+
+          <section class="session-io-block">
+            <div class="session-io-copy-block">
+              <h3 class="sec-label">Import</h3>
+              <p class="session-io-copy">
+                Load a S-Nav search session JSON.
+                Replaces the current filters, range, and results.
+              </p>
+            </div>
+            <button type="button" class="session-io-action" id="session-import">Import</button>
+          </section>
+
+          <section class="session-io-block session-io-block-note">
+            <h3 class="sec-label">Limits</h3>
+            <p class="session-io-copy" id="session-io-limits"></p>
+            <p class="session-io-copy session-io-fails-lead">Import also fails when:</p>
+            <ul class="session-io-fails" id="session-io-fails">
+              <li>Not valid JSON, or not a S-Nav search session</li>
+              <li>Unsupported session version</li>
+              <li>Invalid mode, seed range, filters, or results</li>
+            </ul>
+          </section>
+
+          <p class="session-io-status" id="session-io-status" role="status" hidden></p>
+        </div>
+      </div>
+    </div>
+
+    <div id="codes-overlay" class="session-io-overlay codes-overlay" hidden>
+      <div class="session-io-backdrop" data-codes-close tabindex="-1" aria-hidden="true"></div>
+      <div
+        class="session-io-panel codes-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="codes-title"
+      >
+        <header class="session-io-head">
+          <h2 class="sec-label" id="codes-title">Codes</h2>
+          <button type="button" class="session-io-close" data-codes-close aria-label="Close">✕</button>
+        </header>
+
+        <div class="session-io-body">
+          <section class="session-io-block">
+            <p class="session-io-copy">
+              Office and maintenance-tunnel keypads use linked 4-digit codes.
+              Type either one and the other updates.
+            </p>
+            <div class="codecalc">
+              <label class="code-field">
+                <span class="code-l">Office</span>
+                <input id="code-office" type="text" inputmode="numeric" maxlength="4" placeholder="1234" autocomplete="off" spellcheck="false" />
+              </label>
+              <span class="code-arrow" aria-hidden="true">⇄</span>
+              <label class="code-field">
+                <span class="code-l">Tunnels</span>
+                <input id="code-tunnels" type="text" inputmode="numeric" maxlength="4" placeholder="1000" autocomplete="off" spellcheck="false" />
+              </label>
+            </div>
+            <p class="note" id="code-note"></p>
+          </section>
+
+          <section class="session-io-block">
+            <p class="session-io-copy">
+              Seed-dependent. Where the linked codes are written.
+            </p>
+            <div class="code-paths">
+              <article class="code-path" aria-label="Office code path">
+                <span class="code-path-node code-path-key">Office code</span>
+                <span class="code-path-rail" aria-hidden="true"></span>
+                <span class="code-path-node code-path-item">Burnt Note</span>
+                <span class="code-path-rail" aria-hidden="true"></span>
+                <span class="code-path-node code-path-room">Pocket Dimension</span>
+              </article>
+              <article class="code-path" aria-label="Tunnels code path">
+                <span class="code-path-node code-path-key">Tunnels code</span>
+                <span class="code-path-rail" aria-hidden="true"></span>
+                <span class="code-path-node code-path-item">Document SCP-372</span>
+                <span class="code-path-rail" aria-hidden="true"></span>
+                <span class="code-path-node code-path-room">SCP-372's Containment Chamber</span>
+              </article>
+            </div>
+          </section>
+
+          <section class="session-io-block session-io-block-note">
+            <p class="session-io-copy">
+              Seed-independent. Fixed door codes.
+            </p>
+            <div class="code-paths">
+              <article class="code-path" aria-label="Code 7816">
+                <span class="code-path-node code-path-digits">7816</span>
+                <span class="code-path-rail" aria-hidden="true"></span>
+                <span class="code-path-node code-path-item">Dr. Harp's office</span>
+                <span class="code-path-rail" aria-hidden="true"></span>
+                <span class="code-path-node code-path-room">Doctors Quarters</span>
+              </article>
+              <article class="code-path" aria-label="Code 5731">
+                <span class="code-path-node code-path-digits">5731</span>
+                <span class="code-path-rail" aria-hidden="true"></span>
+                <span class="code-path-node code-path-item">Storage closet</span>
+                <span class="code-path-rail" aria-hidden="true"></span>
+                <span class="code-path-node code-path-room">SCP-035's Containment Chamber</span>
+              </article>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <div id="about-overlay" class="session-io-overlay about-overlay" hidden>
+      <div class="session-io-backdrop" data-about-close tabindex="-1" aria-hidden="true"></div>
+      <div
+        class="session-io-panel about-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="about-title"
+      >
+        <header class="session-io-head">
+          <h2 class="sec-label" id="about-title">About</h2>
+          <button type="button" class="session-io-close" data-about-close aria-label="Close">✕</button>
+        </header>
+        <div class="session-io-body">
+          <section class="session-io-block">
+            <p class="session-io-copy">
+              Derivative of
+              <a href="https://github.com/Regalis11/scpcb" target="_blank" rel="noopener noreferrer">SCP: Containment Breach</a>
+              by Regalis
+              (<a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 3.0</a>).
+              Map generation is ported from the game’s source.
+            </p>
+            <p class="session-io-copy">
+              S-Nav is released under
+              <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 4.0</a>
+              by
+              <a href="https://github.com/Syial" target="_blank" rel="noopener noreferrer">Syial</a>.
+            </p>
+          </section>
+        </div>
+      </div>
+    </div>
+
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

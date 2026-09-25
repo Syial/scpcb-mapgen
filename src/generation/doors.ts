@@ -1,67 +1,98 @@
-// Portes (CreateMap 7648-7734) : positions seules, chaque salle pose droite + bas. Le jeu itère la grille, les swaps d'overlap sont sans effet ici.
+import type { BlitzRng } from "../rng/blitz_rng";
+import type { PlacedRoom } from "./placement";
+import { ROOM1, ROOM2, ROOM2C, ROOM3 } from "./rooms";
+
+// Portes (CreateMap 7648-7734) + RNG de CreateDoor (Main.bb).
+// CreateDoor : d\open = dopen ; If d\open And big=False And Rand(8)=1 Then AutoClose
+// Blitz n'a théoriquement pas de short-circuit ; on tire Rand(8) toujours (fidèle).
 
 export interface Door {
   x: number; z: number; angle: number;
   from: [number, number];
   to: [number, number];
+  open: number;
 }
 
-export function createDoors(grid: number[][], mapWidth: number, mapHeight: number): Door[] {
-  const spacing = 8;
-  const occ = (x: number, y: number): number =>
-    x >= 0 && y >= 0 && x <= mapWidth + 1 && y <= mapHeight + 1 && grid[x][y] > 0 ? 1 : 0;
+/** I_Zone\Transition fixe dans CreateMap : [0]=13, [1]=7 */
+function doorBig(y: number): number {
+  // y < Transition[1]-1 → zone 3 ; elif y < Transition[0]-1 → zone 2 ; else zone 1
+  // zone 2 → big=2, sinon big=0
+  if (y < 6) return 0; // zone 3
+  if (y < 12) return 2; // zone 2
+  return 0; // zone 1
+}
 
+function wrapAngle(angle: number): number {
+  let a = angle;
+  while (a < 0) a += 360;
+  while (a >= 360) a -= 360;
+  return a;
+}
+
+export function createDoors(
+  grid: number[][],
+  rooms: PlacedRoom[],
+  mapWidth: number,
+  mapHeight: number,
+  rng: BlitzRng,
+): Door[] {
+  const spacing = 8;
   const doors: Door[] = [];
 
   for (let y = mapHeight; y >= 0; y--) {
     for (let x = mapWidth; x >= 0; x--) {
-      if (grid[x][y] > 0) {
-        let rightC = false, downC = false;
+      if (!(grid[x]?.[y] > 0)) continue;
 
-        if (grid[x][y] === 255) {
-          // checkpoint = ROOM2 angle 0 → porte du bas seulement
-          rightC = false;
-          downC = true;
-        } else {
-          const temp = occ(x + 1, y) + occ(x - 1, y) + occ(x, y + 1) + occ(x, y - 1);
-          if (temp === 1) { // ROOM1
-            let a = 0;
-            if (occ(x, y + 1)) a = 180;
-            else if (occ(x - 1, y)) a = 270;
-            else if (occ(x + 1, y)) a = 90;
-            rightC = a === 90;
-            downC = a === 180;
-          } else if (temp === 2) {
-            if (occ(x - 1, y) && occ(x + 1, y)) { rightC = true; downC = false; }        // straight horizontal
-            else if (occ(x, y - 1) && occ(x, y + 1)) { rightC = false; downC = true; }    // straight vertical
-            else { // ROOM2C (coin)
-              let a = 0;
-              if (occ(x - 1, y) && occ(x, y + 1)) a = 180;
-              else if (occ(x + 1, y) && occ(x, y + 1)) a = 90;
-              else if (occ(x - 1, y) && occ(x, y - 1)) a = 270;
-              rightC = a === 0 || a === 90;
-              downC = a === 180 || a === 90;
-            }
-          } else if (temp === 3) { // ROOM3
-            let a = 0;
-            if (!occ(x, y - 1)) a = 180;
-            else if (!occ(x - 1, y)) a = 90;
-            else if (!occ(x + 1, y)) a = 270;
-            rightC = a === 0 || a === 180 || a === 90;
-            downC = a === 180 || a === 90 || a === 270;
-          } else if (temp === 4) { // ROOM4 (default)
-            rightC = true;
-            downC = true;
-          }
-        }
-
-        if (rightC && (x + 1) < (mapWidth + 1) && occ(x + 1, y)) {
-          doors.push({ x: x * spacing + spacing / 2, z: y * spacing, angle: 90, from: [x, y], to: [x + 1, y] });
-        }
-        if (downC && (y + 1) < (mapHeight + 1) && occ(x, y + 1)) {
-          doors.push({ x: x * spacing, z: y * spacing + spacing / 2, angle: 0, from: [x, y], to: [x, y + 1] });
+      let r: PlacedRoom | undefined;
+      for (const cand of rooms) {
+        if (cand.gx === x && cand.gy === y) {
+          r = cand;
+          break;
         }
       }
+      if (!r) continue;
+
+      const angle = wrapAngle(r.angle ?? 0);
+      const big = doorBig(y);
+
+      const pushDoor = (east: boolean) => {
+        let should = false;
+        if (east) {
+          switch (r!.shape) {
+            case ROOM1: should = angle === 90; break;
+            case ROOM2: should = angle === 90 || angle === 270; break;
+            case ROOM2C: should = angle === 0 || angle === 90; break;
+            case ROOM3: should = angle === 0 || angle === 180 || angle === 90; break;
+            default: should = true;
+          }
+          if (!(should && x + 1 < mapWidth + 1 && grid[x + 1][y] > 0)) return;
+        } else {
+          switch (r!.shape) {
+            case ROOM1: should = angle === 180; break;
+            case ROOM2: should = angle === 0 || angle === 180; break;
+            case ROOM2C: should = angle === 180 || angle === 90; break;
+            case ROOM3: should = angle === 180 || angle === 90 || angle === 270; break;
+            default: should = true;
+          }
+          if (!(should && y + 1 < mapHeight + 1 && grid[x][y + 1] > 0)) return;
+        }
+
+        const open = Math.max(rng.randInt(-3, 1), 0);
+        // Pas de short-circuit Blitz : Rand(8) toujours
+        rng.randInt(8);
+        void big;
+        doors.push({
+          x: east ? x * spacing + spacing / 2 : x * spacing,
+          z: east ? y * spacing : y * spacing + spacing / 2,
+          angle: east ? 90 : 0,
+          from: [x, y],
+          to: east ? [x + 1, y] : [x, y + 1],
+          open,
+        });
+      };
+
+      pushDoor(true);
+      pushDoor(false);
     }
   }
 

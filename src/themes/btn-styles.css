@@ -1,0 +1,59 @@
+/* Boutons S-NAV (html[data-btn="…"]) */
+
+/* --- Clay : terracotta flat --- */
+html[data-btn="clay"] .mode-switch,
+html[data-btn="clay"] .view-tabs,
+html[data-btn="clay"] .bar-actions,
+html[data-btn="clay"] .seed-field #seed,
+html[data-btn="clay"] .range-field input,
+html[data-btn="clay"] .code-path,
+html[data-btn="clay"] .codecalc input {
+  background: #C4BEB0;
+  box-shadow: none;
+}
+html[data-btn="clay"] .codecalc input:hover,
+html[data-btn="clay"] .codecalc input:focus-visible {
+  background: #C4BEB0;
+}
+html[data-btn="clay"] .bar-trace {
+  background: transparent;
+  box-shadow: none;
+}
+html[data-btn="clay"] .mode-btn,
+html[data-btn="clay"] .view-tab,
+html[data-btn="clay"] .bar button,
+html[data-btn="clay"] .search-run .bar-actions .go,
+html[data-btn="clay"] .mod-toggle {
+  background: transparent;
+  color: var(--ink-dim);
+  border-color: transparent;
+  box-shadow: none;
+}
+html[data-btn="clay"] .mode-btn.on,
+html[data-btn="clay"] .view-tab.on,
+html[data-btn="clay"] .fb-tog button.on,
+html[data-btn="clay"] .room-pick-zones button.on,
+html[data-btn="clay"] .filter-summary.has-filters,
+html[data-btn="clay"] .fb-compose-actions button,
+html[data-btn="clay"] .session-io-action,
+html[data-btn="clay"] .bar button.go,
+html[data-btn="clay"] .search-run .bar-actions .go,
+html[data-btn="clay"] .bar button.dice,
+html[data-btn="clay"] .mod-toggle:has(input:checked) {
+  background: var(--label-accent);
+  color: var(--accent-ink);
+  border-color: transparent;
+  box-shadow: none;
+}
+html[data-btn="clay"] .mode-btn.on:hover,
+html[data-btn="clay"] .view-tab.on:hover,
+html[data-btn="clay"] .bar button.go:hover,
+html[data-btn="clay"] .search-run .bar-actions .go:hover,
+html[data-btn="clay"] .fb-compose-actions button:hover,
+html[data-btn="clay"] .session-io-action:hover:not(:disabled),
+html[data-btn="clay"] .bar button.dice:hover,
+html[data-btn="clay"] .mod-toggle:has(input:checked):hover {
+  background: var(--label-accent-deep);
+  color: var(--accent-ink);
+}
+

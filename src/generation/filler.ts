@@ -1,104 +1,196 @@
 import { BlitzRng } from "../rng/blitz_rng";
-import { genForestGrid, placeForestRng } from "./forest";
+import { genForestGrid, placeForestRng, type ForestLog } from "./forest";
+export type { ForestLog };
 import lightCounts from "./light_counts.json";
 import fillerDraws from "./filler_template_draws.json";
+import fillerItems from "./filler_items.json";
 
 const LIGHTS = lightCounts as Record<string, number>;
 const DRAWS = fillerDraws as Record<string, number>;
+const CATALOG = fillerItems as Record<string, { name: string; tempname: string; state?: number }[]>;
 
-// room1archive (4655-4726) : `chance` décide branche et early-exit, donc le nombre de tirages.
-function room1archive(rng: BlitzRng): void {
+/** Item placé par FillRoom (ou inventaire start). */
+export interface RoomItem {
+  name: string;
+  tempname: string;
+  /** inventaire joueur (start sans intro), pas au sol */
+  inventory?: boolean;
+  /** it\state FillRoom (batterie nav/radio/nvg…) - littéral, pas RNG */
+  state?: number;
+}
+
+function pushItem(
+  out: RoomItem[],
+  name: string,
+  tempname: string,
+  opts: { inventory?: boolean; state?: number } = {},
+): void {
+  out.push({
+    name,
+    tempname,
+    ...(opts.inventory ? { inventory: true } : {}),
+    ...(opts.state !== undefined ? { state: opts.state } : {}),
+  });
+}
+
+/** CreateItem → toujours 1× Rand(360) (yaw). */
+function createItem(
+  rng: BlitzRng,
+  out: RoomItem[],
+  name: string,
+  tempname: string,
+  state?: number,
+): void {
+  rng.next();
+  pushItem(out, name, tempname, state !== undefined ? { state } : {});
+}
+
+// room1archive (4655-4726)
+function room1archive(rng: BlitzRng, out: RoomItem[]): void {
+  const docs = ["1123", "1048", "939", "682", "079", "096"]; // Case 6 dupliqué (966) mort en Blitz
   for (let xtemp = 0; xtemp <= 1; xtemp++) {
     for (let ytemp = 0; ytemp <= 2; ytemp++) {
       for (let ztemp = 0; ztemp <= 2; ztemp++) {
-        const chance = rng.randInt(-10, 100); // valeur décisive
-        if (chance < 0) break; // Exit : casse la boucle ztemp
-        if (chance < 40) rng.next();          // document : Rand(1,6)
-        else if (chance < 45) rng.next();     // keycard : Rand(1,2)
-        else if (chance < 95) { } // medkit/battery/snav/radio/clipboard : 0 tirage
-        else rng.next();                      // misc : Rand(1,3)
-        rng.next();                           // z : Rnd(-96,96)
-        rng.next();                           // CreateItem : Rand(360) interne
+        const chance = rng.randInt(-10, 100);
+        if (chance < 0) break;
+        let name = "9V Battery";
+        let temp = "bat";
+        if (chance < 40) {
+          const d = rng.randInt(1, 6);
+          name = "Document SCP-" + docs[d - 1];
+          temp = "paper";
+        } else if (chance < 45) {
+          const lvl = rng.randInt(1, 2);
+          name = "Level " + lvl + " Key Card";
+          temp = "key" + lvl;
+        } else if (chance < 50) {
+          name = "First Aid Kit";
+          temp = "firstaid";
+        } else if (chance < 60) {
+          name = "9V Battery";
+          temp = "bat";
+        } else if (chance < 70) {
+          name = "S-NAV 300 Navigator";
+          temp = "nav";
+        } else if (chance < 85) {
+          name = "Radio Transceiver";
+          temp = "radio";
+        } else if (chance < 95) {
+          name = "Clipboard";
+          temp = "clipboard";
+        } else {
+          const misc = rng.randInt(1, 3);
+          name = misc === 1 ? "Playing Card" : misc === 2 ? "Mastercard" : "Origami";
+          temp = "misc";
+        }
+        rng.next(); // Rnd(-96,96) sur z
+        createItem(rng, out, name, temp);
       }
     }
   }
-  rng.next(); // r\RoomDoors[0] = CreateDoor(...)
+  rng.next(); // CreateDoor
 }
 
-// room2closets — 8 items dont 2 conditionnels, + 1 porte (1 Rand(360) par item).
-function room2closets(rng: BlitzRng): void {
-  rng.next(); rng.next(); rng.next();            // 3 items inconditionnels
-  if (rng.randInt(2) === 1) rng.next();          // item conditionnel
-  if (rng.randInt(2) === 1) rng.next();          // item conditionnel
-  rng.next(); rng.next(); rng.next();            // 3 items inconditionnels
-  rng.next();                                    // porte
+function room2closets(rng: BlitzRng, out: RoomItem[]): void {
+  createItem(rng, out, "Document SCP-1048", "paper");
+  createItem(rng, out, "Gas Mask", "gasmask");
+  createItem(rng, out, "9V Battery", "bat");
+  if (rng.randInt(2) === 1) createItem(rng, out, "9V Battery", "bat");
+  if (rng.randInt(2) === 1) createItem(rng, out, "9V Battery", "bat");
+  createItem(rng, out, "Level 1 Key Card", "key1");
+  createItem(rng, out, "Clipboard", "clipboard");
+  createItem(rng, out, "Incident Report SCP-1048-A", "paper");
+  rng.next(); // CreateDoor
 }
 
-// room3servers — 2 items inconditionnels + 2 items conditionnels.
-function room3servers(rng: BlitzRng): void {
-  rng.next();                                    // item
-  if (rng.randInt(2) === 1) rng.next();          // item conditionnel
-  if (rng.randInt(2) === 1) rng.next();          // item conditionnel
-  rng.next();                                    // item (S-NAV)
+function room3servers(rng: BlitzRng, out: RoomItem[]): void {
+  createItem(rng, out, "9V Battery", "bat");
+  if (rng.randInt(2) === 1) createItem(rng, out, "9V Battery", "bat");
+  if (rng.randInt(2) === 1) createItem(rng, out, "9V Battery", "bat");
+  createItem(rng, out, "S-NAV 300 Navigator", "nav", 20);
 }
 
-// room2offices3 — ⚠ Blitz réévalue la borne du For à chaque test : marche aléatoire, pas une borne fixe.
-function room2offices3(rng: BlitzRng): void {
-  rng.randInt(2);                                // If Rand(2)=1 : les 2 branches créent 1 item
-  rng.next();                                    // item (branche)
-  rng.next(); rng.next(); rng.next();            // Object, Document, Radio
+function room2offices2(rng: BlitzRng, out: RoomItem[]): void {
+  createItem(rng, out, "Level 1 Key Card", "key1");
+  createItem(rng, out, "Document SCP-895", "paper");
+  if (rng.randInt(2) === 1) createItem(rng, out, "Document SCP-860", "paper");
+  else createItem(rng, out, "SCP-093 Recovered Materials", "paper");
+  createItem(rng, out, "S-NAV 300 Navigator", "nav", 28);
+  rng.randInt(1, 4); // duck position
+}
+
+function room2offices3(rng: BlitzRng, out: RoomItem[]): void {
+  if (rng.randInt(2) === 1) createItem(rng, out, "Mobile Task Forces", "paper");
+  else createItem(rng, out, "Security Clearance Levels", "paper");
+  createItem(rng, out, "Object Classes", "paper");
+  createItem(rng, out, "Document", "paper");
+  createItem(rng, out, "Radio Transceiver", "radio");
   let i = 0;
   for (;;) {
-    const bound = rng.randInt(0, 1);             // cond : Rand(0,1) réévalué à chaque test
+    const bound = rng.randInt(0, 1);
     if (i > bound) break;
-    rng.next();                                  // body : eyedrops (CreateItem)
+    createItem(rng, out, "ReVision Eyedrops", "eyedrops");
     i++;
   }
-  rng.next();                                    // Battery
-  if (rng.randInt(2) === 1) rng.next();          // item conditionnel
-  if (rng.randInt(2) === 1) rng.next();          // item conditionnel
-  rng.next();                                    // porte
+  createItem(rng, out, "9V Battery", "bat");
+  if (rng.randInt(2) === 1) createItem(rng, out, "9V Battery", "bat");
+  if (rng.randInt(2) === 1) createItem(rng, out, "9V Battery", "bat");
+  rng.next(); // CreateDoor
 }
 
-// Consomme le RNG de FillRoom pour une salle : tirages du template + lumières (2 × min(n, 32)).
+function room860(rng: BlitzRng, out: RoomItem[]): { grid: number[]; logs: ForestLog[] } {
+  rng.next();
+  rng.next();
+  rng.next();
+  rng.next(); // 4 CreateDoor
+  const grid = genForestGrid(rng);
+  const logs = placeForestRng(rng, grid);
+  for (const log of logs) pushItem(out, log.name, log.tempname);
+  createItem(rng, out, "Document SCP-860-1", "paper");
+  createItem(rng, out, "Document SCP-860", "paper");
+  return { grid, logs };
+}
+
+/** FillRoom : RNG + items, même ordre de tirages (bit-exact). */
 export function consumeFiller(
   rng: BlitzRng,
   name: string,
   grid?: number[][],
   gx?: number,
-  gy?: number
-): number[] | undefined {
-  let forestGrid: number[] | undefined;
+  gy?: number,
+): { forest?: { grid: number[]; logs: ForestLog[] }; items: RoomItem[] } {
+  const items: RoomItem[] = [];
+  let forest: { grid: number[]; logs: ForestLog[] } | undefined;
+
   if (name === "room860") {
-    // Case room860 (MapSystem.bb 2111-2193) : 4 portes → forêt → 2 items
-    rng.next(); rng.next(); rng.next(); rng.next(); // 4 CreateDoor (Rand(8))
-    forestGrid = genForestGrid(rng);
-    placeForestRng(rng, forestGrid);
-    rng.next(); rng.next(); // 2 CreateItem (Rand(360))
+    forest = room860(rng, items);
   } else if (name === "room1archive") {
-    room1archive(rng);
+    room1archive(rng, items);
   } else if (name === "room2closets") {
-    room2closets(rng);
+    room2closets(rng, items);
   } else if (name === "room3servers") {
-    room3servers(rng);
+    room3servers(rng, items);
+  } else if (name === "room2offices2") {
+    room2offices2(rng, items);
   } else if (name === "room2offices3") {
-    room2offices3(rng);
+    room2offices3(rng, items);
   } else if (name === "checkpoint1" || name === "checkpoint2") {
-    rng.next(); // 2 portes de base
     rng.next();
-    // porte conditionnelle : If MapTemp(gx, gy-1) = 0
+    rng.next();
     if (grid && gx !== undefined && gy !== undefined) {
       const above = gy - 1 >= 0 ? grid[gx][gy - 1] : 0;
       if (above === 0) rng.next();
     }
   } else {
-    const n = DRAWS[name] ?? 0; // 0 pour les génériques sans case FillRoom
+    // pocketdimension = 9 : item + 2 portes + Rnd(0.8) + 5× Rnd(0.5)
+    const n = DRAWS[name] ?? 0;
     for (let k = 0; k < n; k++) rng.next();
+    const cat = CATALOG[name];
+    if (cat) for (const it of cat) pushItem(items, it.name, it.tempname, { state: it.state });
   }
 
-  // boucle de lumières (après le bloc Select, pour toutes les salles)
   const lightDraws = 2 * Math.min(LIGHTS[name] ?? 0, 32);
   for (let k = 0; k < lightDraws; k++) rng.next();
 
-  return forestGrid; // défini seulement pour room860
+  return { forest, items };
 }

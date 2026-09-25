@@ -1,49 +1,86 @@
-import { theme } from "./theme";
-import { corridorRects } from "./corridor";
+import type { ForestLog } from "../generation/forest";
+import { forestTheme } from "./theme";
+import { esc } from "./esc";
+import { corridorTileSvg, type Open } from "./room_shapes";
 
-// Forêt de SCP-860 (10×10), miroir X ; 0 vide, 1 chemin, 3 porte.
+// Forêt SCP-860-1 : grille fixe 10×10 (comme la facility), cases vides = fond vide.
+// 0 vide, 1 chemin, 3 porte. Logs #n marqués sur leur case.
+
 const N = 10;
 
-export function renderForest(grid: number[]): string {
-  const cell = 24;
-  const pad = 8;
+export function renderForest(grid: number[], logs: ForestLog[] = []): string {
+  const cell = 28;
+  const gap = 3;
+  const step = cell + gap;
+  const padX = 10;
+  const padTop = 36;
+  const padBot = 10;
   const mx = (x: number) => N - 1 - x;
   const occ = (x: number, y: number) => x >= 0 && x < N && y >= 0 && y < N && grid[y * N + x] > 0;
 
-  let x0 = N, y0 = N, x1 = 0, y1 = 0;
+  const logAt = new Map<string, ForestLog>();
+  for (const log of logs) logAt.set(`${log.x},${log.y}`, log);
+
+  // Deux portes (door1 / door2) : A = 1ʳᵉ en scan, B = 2ᵉ - pas entrée/sortie.
+  const doors: { x: number; y: number }[] = [];
   for (let y = 0; y < N; y++)
     for (let x = 0; x < N; x++)
-      if (grid[y * N + x] > 0) {
-        const gx = mx(x);
-        x0 = Math.min(x0, gx); x1 = Math.max(x1, gx);
-        y0 = Math.min(y0, y); y1 = Math.max(y1, y);
-      }
-  if (x1 < x0) { x0 = 0; y0 = 0; x1 = N - 1; y1 = N - 1; }
-  const vx = x0 * cell, vy = y0 * cell, vw = (x1 - x0 + 1) * cell, vh = (y1 - y0 + 1) * cell;
+      if (grid[y * N + x] === 3) doors.push({ x, y });
+  const doorMark = new Map<string, "A" | "B">();
+  if (doors[0]) doorMark.set(`${doors[0].x},${doors[0].y}`, "A");
+  if (doors[1]) doorMark.set(`${doors[1].x},${doors[1].y}`, "B");
+
+  const contentW = N * step - gap;
+  const contentH = N * step - gap;
+  const tw = contentW + padX * 2;
+  const th = contentH + padTop + padBot;
+  const thm = forestTheme;
 
   const p: string[] = [];
-  p.push(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vx - pad} ${vy - pad} ${vw + pad * 2} ${vh + pad * 2}" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" role="img" aria-label="SCP-860 forest">`);
-  p.push(`<rect x="${vx - pad}" y="${vy - pad}" width="${vw + pad * 2}" height="${vh + pad * 2}" fill="${theme.screen}"/>`);
+  p.push(
+    `<svg viewBox="0 0 ${tw} ${th}" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" ` +
+      `role="img" aria-label="SCP-860-1">`,
+  );
+  p.push(`<rect width="${tw}" height="${th}" fill="${thm.screen}"/>`);
 
-  let g = `<g stroke="${theme.grid}" stroke-width="1" vector-effect="non-scaling-stroke">`;
-  for (let gx = x0; gx <= x1 + 1; gx++) g += `<line x1="${gx * cell}" y1="${vy - pad}" x2="${gx * cell}" y2="${vy + vh + pad}"/>`;
-  for (let gy = y0; gy <= y1 + 1; gy++) g += `<line x1="${vx - pad}" y1="${gy * cell}" x2="${vx + vw + pad}" y2="${gy * cell}"/>`;
-  p.push(g + `</g>`);
+  const labels: string[] = [];
 
   for (let y = 0; y < N; y++)
     for (let x = 0; x < N; x++) {
       const c = grid[y * N + x];
       if (c <= 0) continue;
       const gx = mx(x);
-      const fill = c === 3 ? theme.ok : theme.zone[3];
-      const rects = corridorRects(gx * cell, y * cell, cell, {
-        up: occ(x, y - 1), down: occ(x, y + 1),
-        left: occ(x + 1, y), right: occ(x - 1, y),
-      });
-      const r = rects.map((q) => `<rect x="${q.x}" y="${q.y}" width="${q.w}" height="${q.h}" rx="1"/>`).join("");
-      p.push(`<g fill="${fill}">${r}</g>`);
+      const tx = padX + gx * step;
+      const ty = padTop + y * step;
+      const o: Open = {
+        n: occ(x, y - 1),
+        s: occ(x, y + 1),
+        e: occ(x - 1, y),
+        w: occ(x + 1, y),
+      };
+      const isDoor = c === 3;
+      const doorLabel = doorMark.get(`${x},${y}`);
+      const log = logAt.get(`${x},${y}`);
+      const fill = isDoor ? thm.door : log ? thm.log : thm.path;
+      p.push(corridorTileSvg(tx, ty, cell, cell, o, fill));
+
+      if (doorLabel) {
+        labels.push(
+          `<text x="${tx + cell / 2}" y="${ty + cell / 2}" text-anchor="middle" dominant-baseline="central" ` +
+            `font-family='${esc(thm.fontMono)}' font-size="13" fill="${thm.label}" letter-spacing="0.5">` +
+            `${doorLabel}</text>`,
+        );
+      } else if (log) {
+        const n = log.name.replace(/^Log\s*#?/i, "");
+        labels.push(
+          `<text x="${tx + cell / 2}" y="${ty + cell / 2}" text-anchor="middle" dominant-baseline="central" ` +
+            `font-family='${esc(thm.fontMono)}' font-size="12" fill="${thm.label}" letter-spacing="0.35">` +
+            `#${esc(n)}</text>`,
+        );
+      }
     }
 
+  p.push(`<g pointer-events="none">${labels.join("")}</g>`);
   p.push(`</svg>`);
   return p.join("");
 }

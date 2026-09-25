@@ -1,0 +1,447 @@
+{
+ "173": [
+  {
+   "name": "Class D Orientation Leaflet",
+   "tempname": "paper"
+  }
+ ],
+ "914": [
+  {
+   "name": "Addendum: 5/14 Test Log",
+   "tempname": "paper"
+  },
+  {
+   "name": "First Aid Kit",
+   "tempname": "firstaid"
+  },
+  {
+   "name": "Dr. L's Note",
+   "tempname": "paper"
+  }
+ ],
+ "roompj": [
+  {
+   "name": "Document SCP-372",
+   "tempname": "paper"
+  },
+  {
+   "name": "Radio Transceiver",
+   "tempname": "radio",
+   "state": 80
+  }
+ ],
+ "room2testroom2": [
+  {
+   "name": "Level 2 Key Card",
+   "tempname": "key2"
+  },
+  {
+   "name": "S-NAV 300 Navigator",
+   "tempname": "nav",
+   "state": 20
+  }
+ ],
+ "room2storage": [
+  {
+   "name": "Document SCP-939",
+   "tempname": "paper"
+  },
+  {
+   "name": "9V Battery",
+   "tempname": "bat"
+  },
+  {
+   "name": "Empty Cup",
+   "tempname": "emptycup"
+  },
+  {
+   "name": "Level 1 Key Card",
+   "tempname": "key1"
+  }
+ ],
+ "room2sroom": [
+  {
+   "name": "Some SCP-420-J",
+   "tempname": "420"
+  },
+  {
+   "name": "Some SCP-420-J",
+   "tempname": "420"
+  },
+  {
+   "name": "Level 5 Key Card",
+   "tempname": "key5"
+  },
+  {
+   "name": "Nuclear Device Document",
+   "tempname": "paper"
+  },
+  {
+   "name": "Radio Transceiver",
+   "tempname": "radio"
+  }
+ ],
+ "room2shaft": [
+  {
+   "name": "Level 3 Key Card",
+   "tempname": "key3"
+  },
+  {
+   "name": "First Aid Kit",
+   "tempname": "firstaid"
+  },
+  {
+   "name": "9V Battery",
+   "tempname": "bat"
+  },
+  {
+   "name": "9V Battery",
+   "tempname": "bat"
+  },
+  {
+   "name": "ReVision Eyedrops",
+   "tempname": "eyedrops"
+  }
+ ],
+ "room2poffices": [
+  {
+   "name": "Mysterious Note",
+   "tempname": "paper"
+  },
+  {
+   "name": "Ballistic Vest",
+   "tempname": "vest"
+  },
+  {
+   "name": "Incident Report SCP-106-0204",
+   "tempname": "paper"
+  },
+  {
+   "name": "Journal Page",
+   "tempname": "paper"
+  },
+  {
+   "name": "First Aid Kit",
+   "tempname": "firstaid"
+  }
+ ],
+ "room2poffices2": [
+  {
+   "name": "Dr. L's Burnt Note",
+   "tempname": "paper"
+  },
+  {
+   "name": "Dr L's Burnt Note",
+   "tempname": "paper"
+  },
+  {
+   "name": "The Modular Site Project",
+   "tempname": "paper"
+  }
+ ],
+ "room2cafeteria": [
+  {
+   "name": "Cup of Orange Juice",
+   "tempname": "cup"
+  },
+  {
+   "name": "Cup of Coffee",
+   "tempname": "cup"
+  },
+  {
+   "name": "Empty Cup",
+   "tempname": "emptycup"
+  },
+  {
+   "name": "Quarter",
+   "tempname": "25ct"
+  },
+  {
+   "name": "Quarter",
+   "tempname": "25ct"
+  }
+ ],
+ "room2nuke": [
+  {
+   "name": "Nuclear Device Document",
+   "tempname": "paper"
+  },
+  {
+   "name": "Ballistic Vest",
+   "tempname": "vest"
+  }
+ ],
+ "room2tunnel": [
+  {
+   "name": "Scorched Note",
+   "tempname": "paper"
+  }
+ ],
+ "008": [
+  {
+   "name": "Hazmat Suit",
+   "tempname": "hazmatsuit"
+  },
+  {
+   "name": "Document SCP-008",
+   "tempname": "paper"
+  }
+ ],
+ "room035": [
+  {
+   "name": "SCP-035 Addendum",
+   "tempname": "paper"
+  },
+  {
+   "name": "Radio Transceiver",
+   "tempname": "radio"
+  },
+  {
+   "name": "SCP-500-01",
+   "tempname": "scp500"
+  },
+  {
+   "name": "Metal Panel",
+   "tempname": "scp148"
+  },
+  {
+   "name": "Document SCP-035",
+   "tempname": "paper"
+  }
+ ],
+ "room513": [
+  {
+   "name": "SCP-513",
+   "tempname": "scp513"
+  },
+  {
+   "name": "Blood-stained Note",
+   "tempname": "paper"
+  },
+  {
+   "name": "Document SCP-513",
+   "tempname": "paper"
+  }
+ ],
+ "room966": [
+  {
+   "name": "Night Vision Goggles",
+   "tempname": "nvgoggles",
+   "state": 300
+  }
+ ],
+ "room3storage": [
+  {
+   "name": "Black Severed Hand",
+   "tempname": "hand2"
+  },
+  {
+   "name": "Night Vision Goggles",
+   "tempname": "nvgoggles",
+   "state": 450
+  }
+ ],
+ "room049": [
+  {
+   "name": "Document SCP-049",
+   "tempname": "paper"
+  },
+  {
+   "name": "Level 4 Key Card",
+   "tempname": "key4"
+  },
+  {
+   "name": "First Aid Kit",
+   "tempname": "firstaid"
+  }
+ ],
+ "room012": [
+  {
+   "name": "Document SCP-012",
+   "tempname": "paper"
+  },
+  {
+   "name": "Severed Hand",
+   "tempname": "hand"
+  }
+ ],
+ "room3servers2": [
+  {
+   "name": "Document SCP-970",
+   "tempname": "paper"
+  },
+  {
+   "name": "Gas Mask",
+   "tempname": "gasmask"
+  }
+ ],
+ "testroom": [
+  {
+   "name": "Document SCP-682",
+   "tempname": "paper"
+  }
+ ],
+ "room2offices": [
+  {
+   "name": "Document SCP-106",
+   "tempname": "paper"
+  },
+  {
+   "name": "Level 2 Key Card",
+   "tempname": "key2"
+  },
+  {
+   "name": "S-NAV 300 Navigator",
+   "tempname": "nav",
+   "state": 20
+  },
+  {
+   "name": "Notification",
+   "tempname": "paper"
+  }
+ ],
+ "room2scps": [
+  {
+   "name": "SCP-714",
+   "tempname": "scp714"
+  },
+  {
+   "name": "SCP-1025",
+   "tempname": "scp1025"
+  },
+  {
+   "name": "SCP-860",
+   "tempname": "scp860"
+  },
+  {
+   "name": "Document SCP-714",
+   "tempname": "paper"
+  },
+  {
+   "name": "Document SCP-427",
+   "tempname": "paper"
+  }
+ ],
+ "coffin": [
+  {
+   "name": "Document SCP-895",
+   "tempname": "paper"
+  },
+  {
+   "name": "Level 3 Key Card",
+   "tempname": "key3"
+  },
+  {
+   "name": "Night Vision Goggles",
+   "tempname": "nvgoggles",
+   "state": 400
+  }
+ ],
+ "room2ccont": [
+  {
+   "name": "Note from Daniel",
+   "tempname": "paper"
+  }
+ ],
+ "room106": [
+  {
+   "name": "Level 5 Key Card",
+   "tempname": "key5"
+  },
+  {
+   "name": "Dr. Allok's Note",
+   "tempname": "paper"
+  },
+  {
+   "name": "Recall Protocol RP-106-N",
+   "tempname": "paper"
+  }
+ ],
+ "room2test1074": [
+  {
+   "name": "Document SCP-1074",
+   "tempname": "paper"
+  }
+ ],
+ "room1123": [
+  {
+   "name": "Document SCP-1123",
+   "tempname": "paper"
+  },
+  {
+   "name": "SCP-1123",
+   "tempname": "1123"
+  },
+  {
+   "name": "Leaflet",
+   "tempname": "paper"
+  },
+  {
+   "name": "Gas Mask",
+   "tempname": "gasmask"
+  }
+ ],
+ "pocketdimension": [
+  {
+   "name": "Burnt Note",
+   "tempname": "paper"
+  }
+ ],
+ "room2servers2": [
+  {
+   "name": "Night Vision Goggles",
+   "tempname": "nvgoggles",
+   "state": 200
+  }
+ ],
+ "room1162": [
+  {
+   "name": "Document SCP-1162",
+   "tempname": "paper"
+  }
+ ],
+ "room2scps2": [
+  {
+   "name": "SCP-1499",
+   "tempname": "scp1499"
+  },
+  {
+   "name": "Document SCP-1499",
+   "tempname": "paper"
+  },
+  {
+   "name": "Document SCP-500",
+   "tempname": "paper"
+  },
+  {
+   "name": "Emily Ross' Badge",
+   "tempname": "badge"
+  }
+ ],
+ "room2offices4": [
+  {
+   "name": "Sticky Note",
+   "tempname": "paper"
+  }
+ ],
+ "medibay": [
+  {
+   "name": "First Aid Kit",
+   "tempname": "firstaid"
+  },
+  {
+   "name": "Syringe",
+   "tempname": "syringe"
+  },
+  {
+   "name": "Syringe",
+   "tempname": "syringe"
+  }
+ ],
+ "room2cpit": [
+  {
+   "name": "Dr L's Note",
+   "tempname": "paper"
+  }
+ ]
+}

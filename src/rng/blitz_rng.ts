@@ -1,4 +1,5 @@
-// Port bit-exact du RNG de Blitz3D v1.108c (Lehmer/MINSTD, sortie 16 bits en float32) + hash GenerateSeedNumber du jeu.
+// Port bit-exact du RNG Blitz3D 1.108 + hash GenerateSeedNumber.
+// Note : certains forks (ex. Saalvage) remappent state=0 → RND_R ; le jeu officiel non.
 export class BlitzRng {
   private state = 1;
 
@@ -28,14 +29,14 @@ export class BlitzRng {
     return temp;
   }
 
-  // SeedRnd : masque 31 bits, interdit l'état 0.
+  // SeedRnd : masque 31 bits ; seul 0 → 1. M (=2147483647) est autorisé
+  // (Direct RNG / speedrun mod : SeedRnd Int(RandomSeed), sans hash).
   seed(seed: number): void {
     seed = seed & 0x7fffffff;
     this.state = seed !== 0 ? seed : 1;
   }
 
-
-  // Avance l'état et renvoie un float32 dans [0,1) — produits < 2^53, donc exacts sans BigInt.
+  // Avance l'état ; [0,1) float32. SeedRnd(M) → suite collée (« spine »).
   next(): number {
     this.state =
       BlitzRng.A * (this.state % BlitzRng.Q) -

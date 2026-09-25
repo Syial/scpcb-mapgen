@@ -1,13 +1,7 @@
-// Comparateur d'état RNG par salle.
+// Compare l'état RNG salle par salle (port vs log jeu).
 // Usage : node rng_state_compare.mjs <seed> <logfile>
-// Le log jeu doit contenir des lignes : RNGSTATE <state> <name> <x> <z>
-// (émises après chaque CalculateRoomExtents(r) dans CreateRoom).
-//
-// Émet mon rng.state à DEUX checkpoints par salle :
-//   - "afterFill"  = après selectTemplate + consumeFiller (avant le roll d'orientation)
-//   - "afterRoll"  = après le roll d'orientation ROOM2
-// et l'aligne sur l'état loggé par le jeu, pour révéler à la fois la salle
-// qui décroche ET si le roll est inclus dans le point de log du jeu.
+// Log attendu : RNGSTATE <state> <name> <x> <z> après chaque CalculateRoomExtents.
+// Checkpoints port : afterFill (après FillRoom) et afterRoll (après orientation ROOM2).
 
 import { BlitzRng } from "../src/rng/blitz_rng";
 import { carveCorridors } from "../src/generation/carving";
@@ -18,8 +12,12 @@ import { consumeFiller } from "../src/generation/filler";
 import * as fs from "fs";
 
 const ROOM2 = 2;
-const seed = process.argv[2] || "SITE19";
-const logfile = process.argv[3] || "/mnt/user-data/uploads/SITE19_logs.txt";
+const seed = process.argv[2];
+const logfile = process.argv[3];
+if (!seed || !logfile) {
+  console.error("Usage: rng_state_compare.ts <seed> <logfile>");
+  process.exit(1);
+}
 
 // --- état jeu ---
 const gameRows: { state: number; name: string; gx: number; gy: number }[] = [];
@@ -38,7 +36,7 @@ for (const p of placed) {
   if (p.zone === 0) break;
   let name = p.name;
   if (name === "") { const t = selectTemplate(rng, p.zone, p.shape); name = t ? t.name : ""; p.name = name; }
-  consumeFiller(rng, name, carve.grid, p.gx, p.gy);
+  consumeFiller(rng, name, carve.grid, p.gx, p.gy); // retourne { forest, items } - RNG inchangé
   const afterFill = (rng as any).state;
   if (p.shape === ROOM2 && p.angle === null) {
     const h = carve.grid[p.gx - 1][p.gy] > 0 && carve.grid[p.gx + 1][p.gy] > 0;
@@ -49,7 +47,7 @@ for (const p of placed) {
 
 // --- alignement ---
 if (gameRows.length === 0) {
-  console.log("Aucune ligne RNGSTATE trouvée dans le log — vérifier l'instrumentation.");
+  console.log("Aucune ligne RNGSTATE trouvée dans le log - vérifier l'instrumentation.");
   process.exit(0);
 }
 console.log(`Aligne ${Math.min(gameRows.length, mine.length)} salles (jeu=${gameRows.length}, moi=${mine.length})\n`);

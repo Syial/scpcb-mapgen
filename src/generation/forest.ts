@@ -154,11 +154,20 @@ export function genForestGrid(rng: BlitzRng): number[] {
 import hmData from "./forest_heightmaps.json";
 const HM = hmData as Record<string, { w: number; h: number; px: number[] }>;
 
+/** Log placé dans la forêt (CreateItem → 1× Rand(360)). Coords grille PlaceForest. */
+export interface ForestLog {
+  name: string;
+  tempname: string;
+  x: number;
+  y: number;
+}
+
 // PlaceForest (1119-1276) : par pixel de heightmap, Rand(100,260) puis 8 tirages (arbre) ou 2 (rocher).
-export function placeForestRng(rng: BlitzRng, grid: number[]): void {
+export function placeForestRng(rng: BlitzRng, grid: number[]): ForestLog[] {
   const GS = 10;
   const g = (i: number) => (i >= 0 && i < grid.length ? grid[i] : 0);
   const itemPlaced: boolean[] = [false, false, false, false];
+  const logs: ForestLog[] = [];
 
   for (let tx = 1; tx <= GS - 1; tx++) {
     for (let ty = 1; ty <= GS - 1; ty++) {
@@ -188,7 +197,13 @@ export function placeForestRng(rng: BlitzRng, grid: number[]): void {
           // Bug fidèle : itemPlaced re-déclaré par tile → un item par tile où (ty%3)=2.
           if (ty % 3 === 2 && !itemPlaced[Math.floor(ty / 3)]) {
             itemPlaced[Math.floor(ty / 3)] = true;
-            rng.next();
+            rng.next(); // CreateItem Rand(360)
+            logs.push({
+              name: "Log #" + (Math.floor(ty / 3) + 1),
+              tempname: "paper",
+              x: tx,
+              y: ty,
+            });
           }
 
           const hm = HM[String(tileType)];
@@ -208,4 +223,5 @@ export function placeForestRng(rng: BlitzRng, grid: number[]): void {
       }
     }
   }
+  return logs;
 }

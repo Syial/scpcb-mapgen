@@ -1,16 +1,26 @@
 import { BlitzRng } from "../rng/blitz_rng";
 
-// Tunnels de maintenance (UpdateEvents 3164-3293) : re-seed sur le hash, donc dérivables de la seed. Marche aléatoire 19×19, puis case = nb de voisins, entrée/sortie/générateur placés.
+// Tunnels MT (UpdateEvents) : re-seed sur le hash, marche 19x19, entrée/sortie/générateur.
 const GRIDSZ = 19;
+
+export interface TunnelItem {
+  name: string;
+  tempname: string;
+  /** case grille 19×19 (générateur = 7) */
+  x: number;
+  y: number;
+}
 
 export interface TunnelGrid {
   size: number;
-  // 19×19. 0 vide ; 1..4 = couloir (nb de voisins) ; 3 aussi = porte ; 7 = salle générateur.
+  // 19×19. 0 vide ; 1..4 = couloir (nb de voisins) ; 5/6 = portes entrée/sortie après placement ; 7 = générateur.
   cells: number[];
   entrance: [number, number] | null;
   exit: [number, number] | null;
   // Faux si le jeu aurait levé RuntimeError (entrée == sortie) : tunnels non générables.
   ok: boolean;
+  /** SCP-500 + NVG sur chaque case générateur (7) - PlaceGrid Case 7 */
+  items: TunnelItem[];
 }
 
 // Accès borné : hors grille → 0, comme la lecture tableau de Blitz dans ce code.
@@ -32,7 +42,13 @@ export function generateTunnels(seedNumber: number): TunnelGrid {
   else g[ix - 1 + iy * GRIDSZ] = 1;
 
   let count = 2;
+  // SeedRnd(M) colle le RNG à 0 : la marche tourne en rond (count plafonne < 100)
+  // et le jeu gèle ici. On coupe dès qu'il n'y a plus de progrès pour garder
+  // le fragment déjà creusé (affichable même si ok=false).
+  let stalled = 0;
+  let walkAborted = false;
   while (count < 100) {
+    const before = count;
     const tempInt = rng.randInt(1, 5) << rng.randInt(1, 2);
     for (let i = 1; i <= tempInt; i++) {
       let advanced = true;
@@ -49,6 +65,11 @@ export function generateTunnels(seedNumber: number): TunnelGrid {
     dir = dir + ((rng.randInt(0, 1) << 1) - 1);
     while (dir < 0) dir += 4;
     while (dir > 3) dir -= 4;
+    if (count === before) {
+      if (++stalled >= 256) { walkAborted = true; break; }
+    } else {
+      stalled = 0;
+    }
   }
 
   // chaque case marquée → nombre de voisins (choisit le type de tuile)
@@ -60,26 +81,39 @@ export function generateTunnels(seedNumber: number): TunnelGrid {
           (at(walk, x, y + 1) > 0 ? 1 : 0) + (at(walk, x, y - 1) > 0 ? 1 : 0) +
           (at(walk, x + 1, y) > 0 ? 1 : 0) + (at(walk, x - 1, y) > 0 ? 1 : 0);
 
-  // Generator room (7) greffée sur le bord droit d'un couloir.
+  // Case générateur (7) greffée au bord droit d'un couloir.
+  // RNG collé à 0 : Rand(0,1) ne renvoie jamais 1 → x-- infini dans le jeu.
   let maxX = GRIDSZ - 1;
-  for (let x = 0; x <= maxX; x++) {
-    let canRetry = 0;
-    for (let y = 0; y < GRIDSZ; y++) {
-      if (at(g, x + 1, y) > 0) {
-        maxX = x;
-        if (at(g, x + 1, y + 1) < 3 && at(g, x + 1, y - 1) < 3) {
-          canRetry = 1;
-          if (rng.randInt(0, 1) === 1) {
-            g[x + 1 + y * GRIDSZ] += 1;
-            g[x + y * GRIDSZ] = 7;
-            canRetry = 0;
-            break;
+  let genPlaced = false;
+  let genAborted = walkAborted;
+  if (!genAborted) {
+    let genStall = 0;
+    for (let x = 0; x <= maxX; x++) {
+      let canRetry = 0;
+      for (let y = 0; y < GRIDSZ; y++) {
+        if (at(g, x + 1, y) > 0) {
+          maxX = x;
+          if (at(g, x + 1, y + 1) < 3 && at(g, x + 1, y - 1) < 3) {
+            canRetry = 1;
+            if (rng.randInt(0, 1) === 1) {
+              g[x + 1 + y * GRIDSZ] += 1;
+              g[x + y * GRIDSZ] = 7;
+              canRetry = 0;
+              genPlaced = true;
+              break;
+            }
           }
         }
       }
+      if (canRetry) {
+        if (++genStall >= 256) { genAborted = true; break; }
+        x--;
+      } else {
+        genStall = 0;
+      }
     }
-    if (canRetry) x--;
   }
+  const genOk = genPlaced && !genAborted;
 
   // entrée (firstX) et sortie (lastX) : cases droites (valeur 2) isolées
   let firstX = -1, firstY = -1, lastX = -1, lastY = -1;
@@ -96,12 +130,25 @@ export function generateTunnels(seedNumber: number): TunnelGrid {
       if (isolated(x, y)) { lastX = x; lastY = y; }
     }
 
-  const ok = !(firstX === lastX && firstY === lastY);
+  const ok = genOk && !(firstX === lastX && firstY === lastY);
+
+  // Case 7 = générateur : CreateItem SCP-500 + NVG (UpdateEvents ~3437)
+  const items: TunnelItem[] = [];
+  for (let y = 0; y < GRIDSZ; y++)
+    for (let x = 0; x < GRIDSZ; x++)
+      if (g[x + y * GRIDSZ] === 7) {
+        items.push(
+          { name: "SCP-500-01", tempname: "scp500", x, y },
+          { name: "Night Vision Goggles", tempname: "nvgoggles", x, y },
+        );
+      }
+
   return {
     size: GRIDSZ,
     cells: g,
     entrance: firstX >= 0 ? [firstX, firstY] : null,
     exit: lastX >= 0 ? [lastX, lastY] : null,
     ok,
+    items,
   };
 }

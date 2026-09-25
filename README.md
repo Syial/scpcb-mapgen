@@ -1,34 +1,27 @@
 # scpcb-mapgen
 
-[![conformance](https://github.com/Syial/scpcb-mapgen/actions/workflows/ci.yml/badge.svg)](https://github.com/Syial/scpcb-mapgen/actions/workflows/ci.yml)
+![conformance](https://github.com/Syial/scpcb-mapgen/actions/workflows/ci.yml/badge.svg)
 
-Deterministic map generator for **SCP: Containment Breach**, ported from the game's Blitz3D source to TypeScript — **bit-exact**.
+Deterministic, **bit-exact** map generator for **SCP: Containment Breach**, ported from the game's Blitz3D source to TypeScript.
 
-Enter a seed, get the exact facility the game would generate: main map, maintenance tunnels, SCP-860's forest, and whether the run is finishable at all.
+Enter a seed, get the exact facility the game would generate: main map, maintenance tunnels, and SCP-860's forest. Everything runs in the browser; nothing is sent to a server.
 
-## What it does
+Finishability is checked automatically in Trace and Search - something the game itself never verifies.
 
-- **Trace** — full map for any seed: rooms, zones, layout, plus the maintenance tunnels grid and SCP-860's forest, both seed-accurate.
-- **Analyze** — some seeds never generate rooms required to finish the game (`room2ccont` is missing in ~6.3% of seeds). The visualizer detects them.
-- **Search** — scan seed ranges for criteria: missing rooms, unfinishable maps, residual room overlaps.
-- **Mod mode** — the speedrun mod seeds the RNG with a raw number, reaching seed-space regions the base game's hash never produces. Both modes are supported.
+## Features
+
+- **Trace** - full map for any seed, seed-accurate: each room with its events, items, code, keycard, zone, and doors, plus the maintenance tunnels grid and SCP-860's forest.
+- **Search** - scan seed ranges (millions at a time) with combinable criteria: room present or absent, distance between two rooms, residual overlaps, finishability. Runs in a Web Worker so the UI stays responsive; import/export results to resume a scan later.
 
 ## Accuracy
 
-The port reproduces the generator of Blitz3D v1.108c down to float32 x87 semantics, including engine quirks (loop bounds re-evaluated per iteration, non-short-circuit `Or`, un-normalized angle matrices differing by one ULP).
+The source describes the algorithm, but not how the compiler resolves floating-point arithmetic at the bit level; that part had to be reverse-engineered from the compiled binary. The port reproduces Blitz3D v1.108c's generator (Lehmer LCG, A=48271, M=2³¹−1) down to float32 x87 semantics, including engine quirks (loop bounds re-evaluated per iteration, non-short-circuit `Or`, un-normalized angle matrices differing by one ULP).
 
-Verified against ground truth: the game compiled in debug mode, instrumented to dump the raw bits of every room extent it computes. The conformance suite compares bit patterns — a single ULP fails the test.
+Verified against ground truth: the game compiled in debug mode, instrumented to dump the raw bits of every room extent it computes. The conformance suite compares bit patterns - a single ULP fails the test.
 
 ```
 npm test
-# ✓ 6 maps, 7321 extents — 100% bit-exact
-```
-
-## Run it
-
-```
-npm install
-npm run dev
+# ✓ 6 maps, 7321 extents - 100% bit-exact
 ```
 
 ## Credits & license

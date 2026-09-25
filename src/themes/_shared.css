@@ -1,0 +1,22 @@
+/* Contraintes communes : clair, arrondi léger. */
+html[data-theme] {
+  --radius: 2px;
+  --radius-lg: 3px;
+  --bw: 1px;
+  --label-transform: none;
+  --label-tracking: 0.04em;
+  --fs-body: 13px;
+  --fs-ui: 13px;
+  --fs-meta: 12px;
+  --fs-title: 17px;
+  --fs-brand: 15px;
+}
+
+html[data-theme] .chassis {
+  background: var(--screen);
+}
+
+html[data-theme] #sel-name {
+  font-family: var(--display);
+  font-weight: 500;
+}

@@ -1,6 +1,6 @@
-import type { MapModel } from "./generation";
+import type { MapModel, PlacedRoom } from "./generation";
 
-// Quelles salles obligatoires manquent — le jeu ne le vérifie jamais (SetRoom échoue en silence).
+// Quelles salles obligatoires manquent - le jeu ne le vérifie jamais (SetRoom échoue en silence).
 
 export type Severity = "blocking" | "degraded";
 
@@ -16,6 +16,11 @@ export interface MapAnalysis {
   finishable: boolean;
   // salles absentes, les bloquantes d'abord
   missing: MissingRoom[];
+  /**
+   * Tunnel early-escape PD (UpdateEvents Case 16-19) :
+   * premier `tunnel` CreateMap (y↓, x↑), 106 State=250.
+   */
+  pdEarlyEscape: PlacedRoom | null;
 }
 
 // Salles sans lesquelles finir est impossible (chaîne electrical center → 079).
@@ -32,7 +37,7 @@ const BLOCKING: Record<string, Omit<MissingRoom, "name" | "severity">> = {
   },
 };
 
-// Absences non bloquantes — servies dans cet ordre, les dernières sautent en premier.
+// Absences non bloquantes - servies dans cet ordre, les dernières sautent en premier.
 const DEGRADED: Record<string, Omit<MissingRoom, "name" | "severity">> = {
   room106: { label: "SCP-106", effect: "Containment chamber missing." },
   // le jeu prévoit son absence : lockdown HCZ désactivé d'office
@@ -43,6 +48,11 @@ const DEGRADED: Record<string, Omit<MissingRoom, "name" | "severity">> = {
 
 // Ordre d'affichage : bloquantes d'abord, puis l'ordre de service de SetRoom.
 const ORDER = ["room2ccont", "room079", "room106", "008", "room035", "coffin"];
+
+/** Premier `tunnel` créé (= ordre CreateMap / model.rooms). */
+export function earlyEscapeTunnel(rooms: PlacedRoom[]): PlacedRoom | null {
+  return rooms.find((r) => r.name === "tunnel") ?? null;
+}
 
 export function analyseMap(model: MapModel): MapAnalysis {
   const present = new Set(model.rooms.map((r) => r.name));
@@ -56,5 +66,9 @@ export function analyseMap(model: MapModel): MapAnalysis {
     if (d) missing.push({ name, severity: "degraded", ...d });
   }
 
-  return { finishable: !missing.some((m) => m.severity === "blocking"), missing };
+  return {
+    finishable: !missing.some((m) => m.severity === "blocking"),
+    missing,
+    pdEarlyEscape: earlyEscapeTunnel(model.rooms),
+  };
 }
